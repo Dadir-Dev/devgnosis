@@ -20,3 +20,6 @@
 
 <!-- Keep a record of changes and updates. Earliest to latest -->
 -->
+
+**Initial Setup**
+Next.js 16, Tailwind CSS, TypeScript configuration(Completed).

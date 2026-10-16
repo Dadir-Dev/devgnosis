@@ -22,38 +22,38 @@ The product should feel like the speed of Raycast, the organization of Notion, a
 
 ## Who it serves
 
-| Persona | Job to be done | Example saved knowledge |
-| --- | --- | --- |
-| Everyday developer | Reuse a reliable bit of work quickly | Git commands, API links, debug notes |
-| AI-first developer | Build a reusable prompt/context library | System prompts, agent workflows, repo context |
-| Content creator or educator | Organize examples and explanations | Course notes, code blocks, teaching links |
-| Full-stack builder | Keep patterns ready across projects | Boilerplates, API examples, architecture notes |
+| Persona                     | Job to be done                          | Example saved knowledge                        |
+| --------------------------- | --------------------------------------- | ---------------------------------------------- |
+| Everyday developer          | Reuse a reliable bit of work quickly    | Git commands, API links, debug notes           |
+| AI-first developer          | Build a reusable prompt/context library | System prompts, agent workflows, repo context  |
+| Content creator or educator | Organize examples and explanations      | Course notes, code blocks, teaching links      |
+| Full-stack builder          | Keep patterns ready across projects     | Boilerplates, API examples, architecture notes |
 
 ## MVP scope
 
 ### Core workflows
 
-| Workflow | Outcome |
-| --- | --- |
-| Capture | Create a typed text item or link in the global quick-create drawer. |
-| Organize | Add tags and place one item in any number of collections. |
+| Workflow | Outcome                                                                    |
+| -------- | -------------------------------------------------------------------------- |
+| Capture  | Create a typed text item or link in the global quick-create drawer.        |
+| Organize | Add tags and place one item in any number of collections.                  |
 | Retrieve | Search titles, content, tags, and type; filter and open an item instantly. |
-| Reuse | Copy code/commands/prompts, open links, or download attached files. |
-| Navigate | Browse type pages, collections, favorites, pinned items, and recents. |
+| Reuse    | Copy code/commands/prompts, open links, or download attached files.        |
+| Navigate | Browse type pages, collections, favorites, pinned items, and recents.      |
 
 ### System item types
 
 System types are seeded, stable, and cannot be renamed or deleted. Their visual treatment is consistent across the app.
 
-| Type | Icon | Color | Content mode | Availability |
-| --- | :---: | --- | --- | --- |
-| Snippet | `Code2` | `#3B82F6` | Markdown/code text | Free |
-| Prompt | `Sparkles` | `#8B5CF6` | Markdown text | Free |
-| Note | `StickyNote` | `#FDE047` | Markdown text | Free |
-| Command | `Terminal` | `#F97316` | Plain/code text | Free |
-| Link | `Link` | `#10B981` | URL + optional description | Free |
-| File | `File` | `#6B7280` | Uploaded file | Pro |
-| Image | `Image` | `#EC4899` | Uploaded image | Pro |
+| Type    |     Icon     | Color     | Content mode               | Availability |
+| ------- | :----------: | --------- | -------------------------- | ------------ |
+| Snippet |   `Code2`    | `#3B82F6` | Markdown/code text         | Free         |
+| Prompt  |  `Sparkles`  | `#8B5CF6` | Markdown text              | Free         |
+| Note    | `StickyNote` | `#FDE047` | Markdown text              | Free         |
+| Command |  `Terminal`  | `#F97316` | Plain/code text            | Free         |
+| Link    |    `Link`    | `#10B981` | URL + optional description | Free         |
+| File    |    `File`    | `#6B7280` | Uploaded file              | Pro          |
+| Image   |   `Image`    | `#EC4899` | Uploaded image             | Pro          |
 
 Suggested [Lucide](https://lucide.dev/icons/) icon names are shown above. A type’s content mode, rather than its display name, determines the editor and validation rules.
 
@@ -69,16 +69,16 @@ The following are valuable, but should not delay a polished library MVP:
 
 ## Plans and entitlements
 
-| Capability | Free | Pro — $5/month |
-| --- | ---: | ---: |
-| Total items | 50 | Unlimited |
-| Collections | 3 | Unlimited |
-| Text and link types | Yes | Yes |
-| File and image uploads | — | Yes |
-| Basic search | Yes | Yes |
-| AI enrichment | — | Yes |
-| Export (JSON / ZIP) | — | Yes |
-| Priority support | — | Yes |
+| Capability             | Free | Pro — $5/month |
+| ---------------------- | ---: | -------------: |
+| Total items            |   50 |      Unlimited |
+| Collections            |    3 |      Unlimited |
+| Text and link types    |  Yes |            Yes |
+| File and image uploads |    — |            Yes |
+| Basic search           |  Yes |            Yes |
+| AI enrichment          |    — |            Yes |
+| Export (JSON / ZIP)    |    — |            Yes |
+| Priority support       |    — |            Yes |
 
 During development, enable an **entitlement bypass** only in non-production environments. Production API routes—not just the interface—must enforce quotas and Pro-only features.
 
@@ -102,14 +102,14 @@ flowchart LR
 
 ### Routes
 
-| Route | Purpose |
-| --- | --- |
-| `/` | Personalized home: pinned, recent, and favorite content |
-| `/items/[type]` | Filtered type view, e.g. `/items/snippets` |
-| `/collections` | All collections |
-| `/collections/[slug]` | Collection detail and its items |
-| `/search` | Full search results with URL-backed filters |
-| `/settings` | Profile, appearance, account, billing, export |
+| Route                 | Purpose                                                 |
+| --------------------- | ------------------------------------------------------- |
+| `/`                   | Personalized home: pinned, recent, and favorite content |
+| `/items/[type]`       | Filtered type view, e.g. `/items/snippets`              |
+| `/collections`        | All collections                                         |
+| `/collections/[slug]` | Collection detail and its items                         |
+| `/search`             | Full search results with URL-backed filters             |
+| `/settings`           | Profile, appearance, account, billing, export           |
 
 Use a stable `slug` for navigable collection URLs. Never derive permissions from slugs or client-side filters.
 
@@ -122,15 +122,40 @@ Use a stable `slug` for navigable collection URLs. Never derive permissions from
 - **Feedback:** optimistic updates where safe, undoable toasts for removal, loading skeletons, visible keyboard focus, and reduced-motion support.
 - **Code:** syntax highlighting, language label, one-click copy, and preserved whitespace.
 
+## Design references
+
+These approved UI mockups guide implementation of the dashboard shell, responsive behavior, collection/item hierarchy, and detail-drawer patterns. They are design references, not exact pixel-for-pixel requirements.
+
+## Design references
+
+The following desktop mockups are the visual baseline for the DevGnosis dashboard. They guide layout, hierarchy, dark-mode treatment, type-color accents, and the item detail experience; implementation should remain responsive and accessible rather than pixel-copying fixed dimensions.
+
+### Dashboard — default state
+
+![DevGnosis desktop dashboard](./screenshots/dashboard-ui-main.png)
+
+- Persistent sidebar with navigation, item-type counts, collections, settings, and theme controls.
+- Global search and filtering toolbar.
+- Pinned items followed by color-accented collection cards.
+- Dark, developer-focused interface with restrained glows and syntax-highlighted code.
+
+### Dashboard — item detail drawer
+
+![DevGnosis dashboard with item drawer](./screenshots/dashboard-ui-drawer.png)
+
+- Selecting an item opens a right-side detail drawer while preserving dashboard context.
+- The drawer supports code/content preview, tags, collection membership, metadata, and item actions.
+- On mobile, this pattern becomes a full-screen detail sheet.
+
 ### Essential keyboard actions
 
-| Shortcut | Action |
-| --- | --- |
-| `⌘/Ctrl + K` | Search or command palette |
-| `C` | New item (when not editing text) |
-| `⌘/Ctrl + Enter` | Save item |
-| `Esc` | Close drawer or dialog |
-| `⌘/Ctrl + Shift + C` | Copy current item content |
+| Shortcut             | Action                           |
+| -------------------- | -------------------------------- |
+| `⌘/Ctrl + K`         | Search or command palette        |
+| `C`                  | New item (when not editing text) |
+| `⌘/Ctrl + Enter`     | Save item                        |
+| `Esc`                | Close drawer or dialog           |
+| `⌘/Ctrl + Shift + C` | Copy current item content        |
 
 ## Architecture
 
@@ -189,24 +214,24 @@ erDiagram
 
 ### Model decisions
 
-| Model | Key fields and constraints |
-| --- | --- |
-| `users` | Auth-managed identity plus `plan`, `planStatus`, and Stripe IDs. Do not use a mutable `isPro` boolean as the only entitlement record. |
-| `item_types` | `id`, `owner_id` nullable, `key`, `name`, `icon`, `color`, `content_kind`, `is_system`. System keys are unique; custom type names are unique per owner. |
-| `items` | Owner, item type, title, description, `content`, `url`, optional file metadata, language, `is_favorite`, `is_pinned`, timestamps, and `last_opened_at`. |
-| `collections` | Owner, unique per-owner `slug`, name, optional description, `is_favorite`, optional `default_type_id`, timestamps. |
-| `item_collections` | Composite primary key of `item_id` and `collection_id`; includes `added_at`. Both referenced records must belong to the same user. |
-| `tags` | Owner plus a normalized name; unique on `(owner_id, normalized_name)`. |
-| `item_tags` | Composite primary key of `item_id` and `tag_id`. |
-| `subscriptions` | Provider customer/subscription IDs, plan, status, period end, and webhook/audit timestamps. |
+| Model              | Key fields and constraints                                                                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `users`            | Auth-managed identity plus `plan`, `planStatus`, and Stripe IDs. Do not use a mutable `isPro` boolean as the only entitlement record.                   |
+| `item_types`       | `id`, `owner_id` nullable, `key`, `name`, `icon`, `color`, `content_kind`, `is_system`. System keys are unique; custom type names are unique per owner. |
+| `items`            | Owner, item type, title, description, `content`, `url`, optional file metadata, language, `is_favorite`, `is_pinned`, timestamps, and `last_opened_at`. |
+| `collections`      | Owner, unique per-owner `slug`, name, optional description, `is_favorite`, optional `default_type_id`, timestamps.                                      |
+| `item_collections` | Composite primary key of `item_id` and `collection_id`; includes `added_at`. Both referenced records must belong to the same user.                      |
+| `tags`             | Owner plus a normalized name; unique on `(owner_id, normalized_name)`.                                                                                  |
+| `item_tags`        | Composite primary key of `item_id` and `tag_id`.                                                                                                        |
+| `subscriptions`    | Provider customer/subscription IDs, plan, status, period end, and webhook/audit timestamps.                                                             |
 
 Items use nullable content fields because they support three mutually exclusive storage modes. Enforce the valid combination in application validation and, where practical, database `CHECK` constraints:
 
-| `content_kind` | Required item fields | Must be empty |
-| --- | --- | --- |
-| `text` | `content` | file fields, `url` |
-| `url` | `url` | file fields |
-| `file` | `storage_key`, `file_name`, `mime_type`, `file_size_bytes` | `content`, `url` |
+| `content_kind` | Required item fields                                       | Must be empty      |
+| -------------- | ---------------------------------------------------------- | ------------------ |
+| `text`         | `content`                                                  | file fields, `url` |
+| `url`          | `url`                                                      | file fields        |
+| `file`         | `storage_key`, `file_name`, `mime_type`, `file_size_bytes` | `content`, `url`   |
 
 ### Drizzle-oriented schema sketch
 
@@ -260,12 +285,12 @@ Use cursor pagination for large libraries. Redis is not an MVP dependency; intro
 
 AI enriches a saved item after the primary save succeeds. It should be cancelable, observable, and safe to retry.
 
-| Feature | Input | Output | Guardrail |
-| --- | --- | --- | --- |
-| Auto-tag suggestions | Title + item body | Suggested existing/new tags | User reviews before applying |
-| Summary | Long text | Concise summary | Preserve source; label generated content |
-| Explain code | Code + language | Explanation and caveats | Never execute submitted code |
-| Prompt optimizer | Prompt + optional goal | Revised prompt and diff | Keep original; user applies explicitly |
+| Feature              | Input                  | Output                      | Guardrail                                |
+| -------------------- | ---------------------- | --------------------------- | ---------------------------------------- |
+| Auto-tag suggestions | Title + item body      | Suggested existing/new tags | User reviews before applying             |
+| Summary              | Long text              | Concise summary             | Preserve source; label generated content |
+| Explain code         | Code + language        | Explanation and caveats     | Never execute submitted code             |
+| Prompt optimizer     | Prompt + optional goal | Revised prompt and diff     | Keep original; user applies explicitly   |
 
 The current planned model is `deepseek-flash` (confirm the deployed provider/model identifier at integration time). Send only the minimal user-authorized content necessary, enforce input/output limits, and meter usage by user for cost controls.
 
