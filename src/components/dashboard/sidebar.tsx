@@ -8,47 +8,25 @@ import {
   ChevronsRight,
   Clock,
   CodeXml,
-  File as FileIcon,
   Folder,
   House,
-  Image as ImageIcon,
-  Link as LinkIcon,
   Lock,
   Menu,
   Moon,
   Search,
   Settings,
-  Sparkles,
   Star,
-  StickyNote,
-  Terminal,
   X,
   type LucideIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  collections,
-  currentUser,
-  itemTypes,
-  items,
-  type MockItemTypeKey,
-} from "@/lib/mock-data";
+import { TYPE_ICONS } from "@/lib/item-types";
+import { collections, currentUser, itemTypes, items } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 import { useSidebar } from "./sidebar-context";
-
-/** Lucide icon per system item type (see project-overview's type table). */
-const TYPE_ICONS: Record<MockItemTypeKey, LucideIcon> = {
-  snippet: CodeXml,
-  prompt: Sparkles,
-  command: Terminal,
-  note: StickyNote,
-  link: LinkIcon,
-  file: FileIcon,
-  image: ImageIcon,
-};
 
 /** Favorites pinned near the top of the collections list. */
 const favoriteCollections = collections.filter((collection) => collection.isFavorite);
