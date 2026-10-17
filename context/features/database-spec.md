@@ -54,18 +54,17 @@ Package manager is **bun**.
 
 ```bash
 # Runtime
-bun add drizzle-orm@rc @neondatabase/serverless better-auth @better-auth/drizzle-adapter
-
+bun add drizzle-orm@0.45 @neondatabase/serverless better-auth @better-auth/drizzle-adapter
 # Tooling
-bun add -D drizzle-kit@rc dotenv
+bun add -D drizzle-kit@0.31 dotenv
 ```
 
-- `drizzle-orm` / `drizzle-kit`: target the **v1 line** (`@rc`, currently `1.0.0-rc.4`). v1
-  contains breaking changes; read the upgrade guide before writing schema or config code:
-  <https://orm.drizzle.team/docs/upgrade-v1> and
-  <https://orm.drizzle.team/docs/v0-v1-changes>. If the project decides to stay on the stable
-  line instead, pin `drizzle-orm@0.45.x` / `drizzle-kit@0.31.x` and use the v0 docs — record
-  that choice here.
+- `drizzle-orm` / `drizzle-kit`: **decision recorded — the project targets the stable v0 line**,
+  pinned to `drizzle-orm@0.45.x` / `drizzle-kit@0.31.x` (the v1 `@rc` line is not used). Use the
+  v0 documentation: <https://orm.drizzle.team/docs/overview>. The array-return form used in the
+  schema samples below is supported on 0.45.x. If the project later moves to v1, read the upgrade
+  guide first — it contains breaking changes: <https://orm.drizzle.team/docs/upgrade-v1> and
+  <https://orm.drizzle.team/docs/v0-v1-changes>.
 - `@neondatabase/serverless`: Neon serverless driver (`neon-http` / `neon-serverless`).
 - `better-auth` + `@better-auth/drizzle-adapter`: auth, using Drizzle as its adapter.
 - `dotenv`: `drizzle.config.ts` runs outside Next.js, so it must load `.env` explicitly.
@@ -177,13 +176,27 @@ bun x auth@latest generate
   the application schema is `text` — not `uuid`.
 - After generating, run `bun run db:generate` so the auth tables become part of the reviewed
   migration history like any other schema change.
+- **Implemented command** (records the output path and forces the Drizzle/PostgreSQL generator):
 
-**Decision to confirm (record it in `@context/project-overview.md`):** the overview describes
-`users` as "auth-managed identity plus `plan`, `planStatus`, and Stripe IDs", while the coding
-standards require Better Auth's managed tables to stay distinct from app profile data. The
-recommended resolution used below is to keep generated auth tables auth-only and put
-app-owned profile/entitlement fields in a `user_profiles` table (see below). The alternative is
-Better Auth's `additionalFields` on `user`; either is acceptable, but the two documents must
+  ```bash
+  bun x auth@latest generate --config src/lib/auth.ts \
+    --output src/db/schema/auth.ts --adapter drizzle --dialect postgresql -y
+  ```
+
+  This is wired up as `bun run auth:generate`.
+- **Caveat — the CLI cannot load `server-only`:** because `src/lib/auth.ts` imports the Drizzle
+  client, and `src/db/index.ts` / `src/lib/env.ts` import `server-only`, the CLI aborts with
+  *"Please remove import 'server-only' from your auth config file temporarily."* Temporarily
+  remove those two `import "server-only";` lines, run `auth:generate`, then restore them. (The
+  generated auth tables use plain `timestamp`, not `timestamptz`; per this spec they are not
+  hand-edited beyond regeneration.)
+
+**Decision (confirmed — recorded in `@context/project-overview.md`):** the overview previously
+described `users` as "auth-managed identity plus `plan`, `planStatus`, and Stripe IDs", while the
+coding standards require Better Auth's managed tables to stay distinct from app profile data.
+**Resolved:** generated auth tables stay auth-only, and app-owned profile/entitlement fields live
+in a `user_profiles` table (see below). Better Auth's `additionalFields` on `user` was considered
+and rejected. `@context/project-overview.md` was updated in the same change so the two documents
 agree.
 
 ## Application schema
@@ -596,8 +609,8 @@ idempotent — safe to run repeatedly and on every deploy:
 - Neon branch promotion is the deploy path: migrations authored on the development branch are
   the same files applied to the production branch. There is no `push` step in either
   environment.
-- Confirm the Drizzle v1-vs-stable decision and the `user_profiles`-vs-`additionalFields`
-  decision before implementing, and update `@context/project-overview.md` in the same change if
-  either diverges from the documented model.
+- **Decisions settled before implementation:** the Drizzle line (stable v0 — `drizzle-orm@0.45.x`
+  / `drizzle-kit@0.31.x`) and the `user_profiles`-vs-`additionalFields` choice (separate
+  `user_profiles` table). `@context/project-overview.md` was updated to match.
 - Revisit the driver choice if the app is deployed to an environment without Node's `ws`
   support, and revisit `neon-http` for reads only if there is measured pressure.
