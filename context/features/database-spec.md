@@ -519,6 +519,7 @@ Scripts in `package.json` (bun):
 | `db:check`          | `drizzle-kit check`                  | Detect conflicting/inconsistent migration history |
 | `db:studio`         | `drizzle-kit studio`                 | Inspect the database                          |
 | `db:seed`           | `bun run src/db/seed.ts`             | Idempotently seed system item types          |
+| `db:smoke`          | `bun run src/db/smoke.ts`            | Read/write smoke checks against the connected branch |
 | `auth:generate`     | `bun x auth@latest generate`         | Regenerate Better Auth tables                |
 
 Rules:
@@ -576,6 +577,8 @@ idempotent — safe to run repeatedly and on every deploy:
       and the generated SQL was reviewed.
 - [ ] `bun run db:migrate` applies cleanly to a fresh Neon development branch.
 - [ ] `bun run db:check` passes with no migration-history conflicts.
+- [ ] `bun run db:smoke` passes against the migrated branch (covers the cascade/`restrict`/`CHECK`
+      and search checks below in one command).
 - [ ] Deleting a `user` cascades to their items, collections, tags, join rows, profile, and
       subscriptions, but does not delete rows owned by another user.
 - [ ] Deleting an `item_type` with items attached is rejected (`restrict`).
