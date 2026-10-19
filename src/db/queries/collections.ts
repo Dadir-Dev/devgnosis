@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, count, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray } from "drizzle-orm";
 
 import { db } from "@/db";
 import { collections, itemCollections, itemTypes, items } from "@/db/schema";
@@ -97,6 +97,9 @@ export async function getRecentCollections(
   return buildCollectionSummaries(collectionRows, typeRows);
 }
 
+/** Rolling window for `addedThisWeek`: the last seven days, not the calendar week. */
+export const ADDED_THIS_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
 /** Owner-scoped item total for the dashboard header and stats. */
 export function itemCountQuery(userId: string) {
   return db
@@ -113,17 +116,60 @@ export function collectionCountQuery(userId: string) {
     .where(eq(collections.ownerId, userId));
 }
 
-/** Owner-scoped item and collection totals for the dashboard header and stats. */
+/** Owner-scoped count of favorite items. */
+export function favoriteItemCountQuery(userId: string) {
+  return db
+    .select({ value: count() })
+    .from(items)
+    .where(and(eq(items.ownerId, userId), eq(items.isFavorite, true)));
+}
+
+/** Owner-scoped count of favorite collections. */
+export function favoriteCollectionCountQuery(userId: string) {
+  return db
+    .select({ value: count() })
+    .from(collections)
+    .where(and(eq(collections.ownerId, userId), eq(collections.isFavorite, true)));
+}
+
+/** Owner-scoped count of items created at or after `since`. */
+export function addedThisWeekQuery(userId: string, since: Date) {
+  return db
+    .select({ value: count() })
+    .from(items)
+    .where(and(eq(items.ownerId, userId), gte(items.createdAt, since)));
+}
+
+/** Start of the rolling seven-day window, relative to `now`. */
+export function getAddedThisWeekSince(now = new Date()): Date {
+  return new Date(now.getTime() - ADDED_THIS_WEEK_MS);
+}
+
+/** Owner-scoped totals for the dashboard header and all four stat cards. */
 export async function getDashboardCounts(
   userId: string,
 ): Promise<DashboardCounts> {
-  const [itemRows, collectionRows] = await Promise.all([
+  const since = getAddedThisWeekSince();
+
+  const [
+    itemRows,
+    collectionRows,
+    favoriteItemRows,
+    favoriteCollectionRows,
+    addedThisWeekRows,
+  ] = await Promise.all([
     itemCountQuery(userId),
     collectionCountQuery(userId),
+    favoriteItemCountQuery(userId),
+    favoriteCollectionCountQuery(userId),
+    addedThisWeekQuery(userId, since),
   ]);
 
   return {
     items: itemRows[0]?.value ?? 0,
     collections: collectionRows[0]?.value ?? 0,
+    favoriteItems: favoriteItemRows[0]?.value ?? 0,
+    favoriteCollections: favoriteCollectionRows[0]?.value ?? 0,
+    addedThisWeek: addedThisWeekRows[0]?.value ?? 0,
   };
 }

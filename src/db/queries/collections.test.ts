@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  addedThisWeekQuery,
   collectionCountQuery,
   collectionTypeBreakdownQuery,
+  favoriteCollectionCountQuery,
+  favoriteItemCountQuery,
+  getAddedThisWeekSince,
   itemCountQuery,
   recentCollectionsQuery,
 } from "./collections";
@@ -70,5 +74,48 @@ describe("dashboard count queries", () => {
     expect(sql).toContain('"collections"."owner_id"');
     expect(params).toContain(OWNER_ID);
     expect(params).not.toContain(OTHER_USER_ID);
+  });
+
+  it("scopes the favorite item count to the owner and isFavorite = true", () => {
+    const { sql, params } = favoriteItemCountQuery(OWNER_ID).toSQL();
+
+    expect(sql).toContain('from "items"');
+    expect(sql).toContain('"items"."owner_id"');
+    expect(sql).toContain('"items"."is_favorite"');
+    expect(params).toContain(OWNER_ID);
+    expect(params).toContain(true);
+    expect(params).not.toContain(OTHER_USER_ID);
+  });
+
+  it("scopes the favorite collection count to the owner and isFavorite = true", () => {
+    const { sql, params } = favoriteCollectionCountQuery(OWNER_ID).toSQL();
+
+    expect(sql).toContain('from "collections"');
+    expect(sql).toContain('"collections"."owner_id"');
+    expect(sql).toContain('"collections"."is_favorite"');
+    expect(params).toContain(OWNER_ID);
+    expect(params).toContain(true);
+    expect(params).not.toContain(OTHER_USER_ID);
+  });
+
+  it("scopes addedThisWeek to the owner and to items created at or after the cutoff", () => {
+    const since = new Date("2026-10-12T12:00:00.000Z");
+    const { sql, params } = addedThisWeekQuery(OWNER_ID, since).toSQL();
+
+    expect(sql).toContain('from "items"');
+    expect(sql).toContain('"items"."owner_id"');
+    expect(sql).toContain('"items"."created_at"');
+    expect(sql).toContain(">=");
+    expect(params).toContain(OWNER_ID);
+    expect(params).toContain(since.toISOString());
+    expect(params).not.toContain(OTHER_USER_ID);
+  });
+
+  it("uses a rolling seven-day window for addedThisWeek", () => {
+    const now = new Date("2026-10-19T12:00:00.000Z");
+
+    expect(getAddedThisWeekSince(now).toISOString()).toBe(
+      "2026-10-12T12:00:00.000Z",
+    );
   });
 });
