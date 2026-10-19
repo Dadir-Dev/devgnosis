@@ -100,7 +100,7 @@ export const itemTypes: MockItemType[] = [
     id: "type_snippet",
     key: "snippet",
     name: "Snippets",
-    icon: "Code2",
+    icon: "CodeXml",
     color: "#3B82F6",
     contentKind: "text",
     isSystem: true,

@@ -47,7 +47,7 @@ System types are seeded, stable, and cannot be renamed or deleted. Their visual 
 
 | Type    |     Icon     | Color     | Content mode               | Availability |
 | ------- | :----------: | --------- | -------------------------- | ------------ |
-| Snippet |   `Code2`    | `#3B82F6` | Markdown/code text         | Free         |
+| Snippet |  `CodeXml`   | `#3B82F6` | Markdown/code text         | Free         |
 | Prompt  |  `Sparkles`  | `#8B5CF6` | Markdown text              | Free         |
 | Note    | `StickyNote` | `#FDE047` | Markdown text              | Free         |
 | Command |  `Terminal`  | `#F97316` | Plain/code text            | Free         |

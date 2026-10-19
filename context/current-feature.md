@@ -1,35 +1,20 @@
 # Current Feature
 
-**Dashboard Collections — real database data**
+<!-- Feature name and short description -->
 
-Replace the dummy collection data in the dashboard main area with real, owner-scoped data from
-Neon PostgreSQL via Drizzle ORM. Full spec: `@context/features/dashboard-collections-spec.md`.
 
 ## Status
 
-Not Started
+<!-- Not Started | In Progress | Completed -->
+Completed
 
 ## Goals
 
-- Add `src/db/queries/collections.ts` with owner-scoped read functions (recent collections with
-  item counts + per-type breakdown, and a small `getDashboardCounts`).
-- Add a server-only session helper (`getCurrentUser`) backed by Better Auth; redirect to
-  `/sign-in` when signed out.
-- Add a minimal `/sign-in` page (email + password Server Action) so the authenticated read is
-  testable with the seeded demo user (`demo@devgnosis.app` / `12345678`).
-- Render 4 recent collection cards from the DB, keeping the current design; card tint from the
-  most-used content type; small icons for all types present.
-- Wire the Items/Collections totals into the dashboard header and the first two stat cards.
-- Add loading/empty/error states, and Vitest coverage for owner scoping + dominant-type logic.
+<!-- Goals and requirements -->
 
 ## Notes
 
-- Uses **Drizzle ORM**, not Prisma (the earlier Prisma wording in the spec was corrected).
-- Card count is **4** (matches current layout and the screenshot), not 6.
-- "Recent" = `collections.updatedAt DESC`.
-- Deferred: items list under collections, `/collections` pages, favorite counts, `addedThisWeek`,
-  and sign-out/OAuth/other auth polish. `@src/lib/mock-data.ts` stays for the sidebar, pinned
-  items, and recent items.
+<!-- Additional notes or comments -->
 
 ## History
 
@@ -56,3 +41,14 @@ Completed on branch `feature/seed-data`: expanded `src/db/seed.ts` from the seve
 **Seed Favorites & Pins** (commit `3eccb94`)
 Seeded two favorite collections (AI Workflows, DevOps), three favorite items, and two pinned items so the dashboard's Pinned and Favorites sections have data. Carried over from the dashboard read-path spike before that branch was dropped.
 **Follow-up (deferred):** re-seeding never prunes rows removed from the `COLLECTIONS` definition, so retired seed rows linger. Reset the demo account (delete its collections/items, then re-insert) once the write path exists and the ownership model for seeded-vs-user rows is settled. Tracked here because the seed feature's own notes were archived.
+
+**Dashboard Collections — real database data**
+Completed on branch `feature/dashboard-collections` (merged to `main`): replaced the mock "Recent collections" grid with owner-scoped reads from Neon via Drizzle. Added `src/db/queries/collections.ts` (`server-only`; `getRecentCollections` + `getDashboardCounts`, two set-based owner-scoped queries), pure summary rules in `src/features/collections/summary.ts` (dominant type with a system-order tie-break, summed `itemCount`, neutral `#6B7280` fallback), a minimal Better Auth sign-in flow (`src/lib/auth-session.ts`, `/sign-in`, a Zod-validated Server Action, `nextCookies()`, `BETTER_AUTH_SECRET`/`BETTER_AUTH_URL`), prop-driven `RecentCollections`/`StatsCards` fed by the async dashboard server component, an empty-collections panel, `loading.tsx` + skeleton, `error.tsx`, and Vitest (`bun run test`, 14 tests: owner scoping on all four queries, dominant-type ordering/tie-break/custom keys, count summation, empty/foreign rows). Also moved canonical type keys into `src/lib/system-item-types.ts` so server code no longer imports `lucide-react`/`react`, made `ItemTypeIcon` accept `{ key, color }` with a `Shapes` fallback, reconciled the snippet icon as `CodeXml`, and made `updatedAt DESC` ordering deterministic with `name`/`id` tie-breaks (the seed writes all collections in one transaction). Verified against the Neon dev branch: demo sign-in returns a session cookie, `/dashboard` renders 18 items / 5 collections with the expected four cards and dominant tints, a random other user id returns 0/0, and a fresh no-collection user renders the empty state. Lint, type-check, tests (14/14), and production build pass. Status: Completed.
+
+**Follow-ups discovered during the dashboard collections work (not scheduled):**
+- `@src/lib/mock-data.ts` is still the source for the sidebar, pinned items, recent items, and the favorite/`addedThisWeek` stats, so the dashboard mixes real and mock numbers. Retire it section by section.
+- `/collections` and `/collections/[slug]` do not exist yet, so the "View all" link and every collection card currently navigate to a 404.
+- No `/api/auth/[...all]` Route Handler is mounted; the Server Action calls Better Auth directly. Add the handler if a Better Auth client or OAuth is introduced.
+- There is no sign-out anywhere, and the seeded demo password is shown on `/sign-in` outside production.
+- `collections.updatedAt` only changes when the collection row is written — adding an item does not bump it. Revisit `createdAt` or `max(item_collections.addedAt)` if "recent" looks wrong with real data.
+- `bun run db:seed` still does not prune retired seed rows (see the Seed Favorites & Pins note above).

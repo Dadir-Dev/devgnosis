@@ -36,7 +36,7 @@ const SYSTEM_ITEM_TYPES: (typeof itemTypes.$inferInsert)[] = [
   {
     key: "snippet",
     name: "Snippet",
-    icon: "Code2",
+    icon: "CodeXml",
     color: "#3B82F6",
     contentKind: "text",
     isSystem: true,
