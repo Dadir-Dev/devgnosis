@@ -19,6 +19,13 @@ const envSchema = z.object({
   DATABASE_URL: postgresUrl,
   /** Neon branch, pooled (PgBouncer) endpoint — used by the app at runtime. */
   DATABASE_URL_POOLED: postgresUrl,
+  /**
+   * Better Auth signing secret (32+ chars). Optional in development, where
+   * Better Auth falls back to its default; required in production.
+   */
+  BETTER_AUTH_SECRET: z.string().min(32).optional(),
+  /** Public origin used by Better Auth for callbacks and redirects. */
+  BETTER_AUTH_URL: z.url().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
