@@ -174,3 +174,46 @@
       }
     }
 }
+
+/*
+ * Shiki output for `CodeBlock`. Shiki emits dual-theme token colors as
+ * `--shiki-light` / `--shiki-dark` CSS variables; these rules resolve them
+ * against the active theme so the highlighted code follows light/dark mode.
+ */
+@layer components {
+  .code-highlight .shiki {
+    margin: 0;
+    padding: 0;
+    background-color: transparent;
+    color: var(--shiki-light);
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .code-highlight .shiki code {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+  }
+
+  .code-highlight .shiki span {
+    color: var(--shiki-light);
+    font-style: var(--shiki-light-font-style);
+    font-weight: var(--shiki-light-font-weight);
+    text-decoration: var(--shiki-light-text-decoration);
+  }
+
+  .dark .code-highlight .shiki {
+    color: var(--shiki-dark);
+  }
+
+  .dark .code-highlight .shiki span {
+    color: var(--shiki-dark);
+    font-style: var(--shiki-dark-font-style);
+    font-weight: var(--shiki-dark-font-weight);
+    text-decoration: var(--shiki-dark-text-decoration);
+  }
+}
