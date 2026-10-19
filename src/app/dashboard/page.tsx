@@ -5,13 +5,14 @@ import { StatsCards } from "@/components/dashboard/stats-cards";
 import { getDashboardCounts, getRecentCollections } from "@/db/queries/collections";
 import { getPinnedItems, getRecentItems } from "@/db/queries/items";
 import { requireUser } from "@/lib/auth-session";
-import { dashboardStats } from "@/lib/mock-data";
+
+/** Static greeting until personalized greetings are implemented. */
+const DASHBOARD_GREETING = "Good morning";
 
 /**
  * Dashboard main area: greeting, summary stats, pinned items, recent
- * collections, and the ten most recent items. Stats, collections, pinned items,
- * and recent items all come from owner-scoped database queries; only the
- * greeting (and the sidebar) still read the mock data module.
+ * collections, and the ten most recent items. Every data section comes from
+ * owner-scoped database queries.
  */
 export default async function DashboardPage() {
   const user = await requireUser();
@@ -30,7 +31,7 @@ export default async function DashboardPage() {
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">
-          {dashboardStats.greeting}, {firstName}
+          {DASHBOARD_GREETING}, {firstName}
         </h1>
         <p className="text-sm text-muted-foreground">
           {counts.items} items across {counts.collections} collections ·{" "}

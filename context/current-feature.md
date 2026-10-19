@@ -11,10 +11,19 @@ Completed
 ## Goals
 
 <!-- Goals and requirements -->
+Completed per `@context/features/stats-sidebar-spec.md`: wired the dashboard
+sidebar to owner-scoped Neon data (system item types with live counts and
+plan-aware PRO badges, favorite/recent collections, user identity, Favorites
+count) and removed the last `mock-data` imports from the dashboard.
 
 ## Notes
 
 <!-- Additional notes or comments -->
+- `src/lib/mock-data.ts` was deleted; no dashboard imports remain.
+- `/collections` and `/items/[type]` pages are deferred, so their links still
+  404 until those features land.
+- `src/app/dashboard/layout.tsx` sets `instant = false` because the
+  authenticated shell reads the session and sidebar data on every request.
 
 ## History
 
@@ -46,7 +55,7 @@ Seeded two favorite collections (AI Workflows, DevOps), three favorite items, an
 Completed on branch `feature/dashboard-collections` (merged to `main`): replaced the mock "Recent collections" grid with owner-scoped reads from Neon via Drizzle. Added `src/db/queries/collections.ts` (`server-only`; `getRecentCollections` + `getDashboardCounts`, two set-based owner-scoped queries), pure summary rules in `src/features/collections/summary.ts` (dominant type with a system-order tie-break, summed `itemCount`, neutral `#6B7280` fallback), a minimal Better Auth sign-in flow (`src/lib/auth-session.ts`, `/sign-in`, a Zod-validated Server Action, `nextCookies()`, `BETTER_AUTH_SECRET`/`BETTER_AUTH_URL`), prop-driven `RecentCollections`/`StatsCards` fed by the async dashboard server component, an empty-collections panel, `loading.tsx` + skeleton, `error.tsx`, and Vitest (`bun run test`, 14 tests: owner scoping on all four queries, dominant-type ordering/tie-break/custom keys, count summation, empty/foreign rows). Also moved canonical type keys into `src/lib/system-item-types.ts` so server code no longer imports `lucide-react`/`react`, made `ItemTypeIcon` accept `{ key, color }` with a `Shapes` fallback, reconciled the snippet icon as `CodeXml`, and made `updatedAt DESC` ordering deterministic with `name`/`id` tie-breaks (the seed writes all collections in one transaction). Verified against the Neon dev branch: demo sign-in returns a session cookie, `/dashboard` renders 18 items / 5 collections with the expected four cards and dominant tints, a random other user id returns 0/0, and a fresh no-collection user renders the empty state. Lint, type-check, tests (14/14), and production build pass. Status: Completed.
 
 **Follow-ups discovered during the dashboard collections work (not scheduled):**
-- `@src/lib/mock-data.ts` is still the source for the sidebar, pinned items, recent items, and the favorite/`addedThisWeek` stats, so the dashboard mixes real and mock numbers. Retire it section by section.
+- **Resolved:** the last `mock-data` dependency (sidebar + greeting) was retired in the Stats & Sidebar feature, and `src/lib/mock-data.ts` is deleted.
 - `/collections` and `/collections/[slug]` do not exist yet, so the "View all" link and every collection card currently navigate to a 404.
 - No `/api/auth/[...all]` Route Handler is mounted; the Server Action calls Better Auth directly. Add the handler if a Better Auth client or OAuth is introduced.
 - There is no sign-out anywhere, and the seeded demo password is shown on `/sign-in` outside production.
@@ -55,3 +64,6 @@ Completed on branch `feature/dashboard-collections` (merged to `main`): replaced
 
 **Dashboard Items — real database data**
 Completed on branch `feature/dashboard-items`, per `@context/features/dashboard-items-spec.md`: replaced the mock pinned items, recent items, and item-related stats with owner-scoped Neon/Drizzle reads. Added `src/db/queries/items.ts` (`server-only`; `getPinnedItems` / `getRecentItems`, joined `item_types`, one batched owner-scoped tag query ordered by `normalizedName`, `updatedAt DESC` with an `id ASC` tie-break), the `DashboardItem` / `ItemTypeView` view model and pure `buildDashboardItems` in `src/features/items/dashboard-items.ts`, prop-driven `PinnedItems` / `RecentItems` (type-tinted pinned cards, URL/file preview fallbacks, hidden empty pinned section, designed recent-items empty panel), database-backed `DashboardCounts` (items, collections, favorite items, favorite collections, rolling-7-day `addedThisWeek`) in `src/db/queries/collections.ts` + `src/features/collections/summary.ts`, a fully prop-driven `StatsCards`, and optional seeded `tags` for every demo item (24 unique tags / 47 item-tag joins; re-running `bun run db:seed` leaves the counts unchanged). Removed `getItemTypeById()` and its mock imports from `src/lib/item-types.ts`; the sidebar and greeting still read `mock-data` by design. Vitest: 29 tests passing, including owner scoping, pinned filtering/limit, ordering/tie-break, batched tags, favorite counts, the rolling-7-day boundary, and empty view models. Lint, typegen + type-check, and production build pass. Status: Completed.
+
+**Stats & Sidebar — real database data**
+Completed on branch `feature/stats-sidebar-data`, per `@context/features/stats-sidebar-spec.md`: retired the last `src/lib/mock-data.ts` imports from the dashboard. The main-area stats were already database-backed; this feature wired the sidebar. Added `systemItemTypeCountsQuery` + `getSidebarItemTypes` to `src/db/queries/items.ts` (system types LEFT JOINed to owner-scoped item counts so zero-count types remain), `sidebarCollectionsQuery` + `getSidebarCollections` + `getFavoriteItemCount` to `src/db/queries/collections.ts` (all favorites plus four most recent non-favorites, reusing `collectionTypeBreakdownQuery`/`buildCollectionSummaries` for dominant-type colors), `userPlanQuery` + `getUserPlan` in `src/db/queries/profiles.ts`, and `src/lib/plans.ts` for fail-closed effective-plan normalization (`pro` + `active`/`trialing` only). New `src/features/dashboard/sidebar.ts` holds the serializable view models and pure `buildSidebarItemTypes` / `buildSidebarCollections` / `formatTypeLabel` helpers. `src/app/dashboard/layout.tsx` now resolves the session and loads sidebar data on the server; `src/components/dashboard/sidebar.tsx` is fully prop-driven with live type counts, plan-aware PRO badges (free users only), star favorites, dominant-type dots for recents, a "View all collections" link, and the real user identity. Replaced the mock greeting with a local `DASHBOARD_GREETING` constant. Added `export const instant = false` to the dashboard layout because the authenticated shell reads the session/sidebar data on every request and cannot produce a static shell; `loading.tsx` still streams the main content. Verified against the Neon development branch: demo user shows 18 items / 5 collections / 3 favorite items / 2 favorite collections, type counts 4/3/0/5/6 with File/Image PRO for free, and toggling the demo profile to `pro` replaces both PRO badges with counts (then reverted to `free`). Vitest: 45 tests passing (added owner-scoped plan and type-count query tests, plan normalization, label/order/plan-lock and favorites/recents/dot builders). Lint, typegen + type-check, and production build pass. Status: Completed.

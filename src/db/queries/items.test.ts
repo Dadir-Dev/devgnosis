@@ -4,6 +4,7 @@ import {
   itemTagsQuery,
   pinnedItemsQuery,
   recentItemsQuery,
+  systemItemTypeCountsQuery,
 } from "./items";
 
 const OWNER_ID = "user-owner";
@@ -77,5 +78,26 @@ describe("itemTagsQuery", () => {
     expect(sql).toContain('inner join "tags"');
     expect(sql).toContain('order by "tags"."normalized_name" asc');
     expect(sql.match(/from "item_tags"/g)).toHaveLength(1);
+  });
+});
+
+describe("systemItemTypeCountsQuery", () => {
+  it("left joins owner-scoped items so zero-count system types remain", () => {
+    const { sql, params } = systemItemTypeCountsQuery(OWNER_ID).toSQL();
+
+    expect(sql).toContain('from "item_types"');
+    expect(sql).toContain('left join "items"');
+    expect(sql).toContain('"items"."owner_id"');
+    expect(sql).toContain('"item_types"."is_system"');
+    expect(sql).toContain('count("items"."id")');
+    expect(sql).toContain("group by");
+    expect(params).toContain(OWNER_ID);
+    expect(params).not.toContain(OTHER_USER_ID);
+  });
+
+  it("orders the grouped rows deterministically", () => {
+    const { sql } = systemItemTypeCountsQuery(OWNER_ID).toSQL();
+
+    expect(sql).toContain('order by "item_types"."key" asc');
   });
 });

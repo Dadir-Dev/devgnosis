@@ -9,6 +9,7 @@ import {
   getAddedThisWeekSince,
   itemCountQuery,
   recentCollectionsQuery,
+  sidebarCollectionsQuery,
 } from "./collections";
 
 const OWNER_ID = "user-owner";
@@ -54,6 +55,26 @@ describe("collectionTypeBreakdownQuery", () => {
     expect(sql).toContain("group by");
     expect(sql).toContain('"item_collections"."collection_id"');
     expect(sql).toContain('"item_types"."id"');
+  });
+});
+
+describe("sidebarCollectionsQuery", () => {
+  it("scopes the read to the owner and selects the favorite flag", () => {
+    const { sql, params } = sidebarCollectionsQuery(OWNER_ID).toSQL();
+
+    expect(sql).toContain('from "collections"');
+    expect(sql).toContain('"collections"."owner_id"');
+    expect(sql).toContain('"is_favorite"');
+    expect(params).toContain(OWNER_ID);
+    expect(params).not.toContain(OTHER_USER_ID);
+  });
+
+  it("orders newest first with deterministic name/id tie-breaks", () => {
+    const { sql } = sidebarCollectionsQuery(OWNER_ID).toSQL();
+
+    expect(sql).toContain('order by "collections"."updated_at" desc');
+    expect(sql).toContain('"collections"."name" asc');
+    expect(sql).toContain('"collections"."id" asc');
   });
 });
 

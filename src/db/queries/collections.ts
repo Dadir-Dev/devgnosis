@@ -9,6 +9,10 @@ import {
   type CollectionSummary,
   type DashboardCounts,
 } from "@/features/collections/summary";
+import {
+  buildSidebarCollections,
+  type SidebarCollections,
+} from "@/features/dashboard/sidebar";
 
 /**
  * Owner-scoped read queries for the dashboard's collection cards.
@@ -97,6 +101,50 @@ export async function getRecentCollections(
   return buildCollectionSummaries(collectionRows, typeRows);
 }
 
+/**
+ * All owner collections, newest first, with the favorite flag needed by the
+ * sidebar. The same `updatedAt`/`name`/`id` ordering as the main-area cards
+ * keeps both surfaces deterministic.
+ */
+export function sidebarCollectionsQuery(userId: string) {
+  return db
+    .select({
+      id: collections.id,
+      slug: collections.slug,
+      name: collections.name,
+      description: collections.description,
+      isFavorite: collections.isFavorite,
+    })
+    .from(collections)
+    .where(eq(collections.ownerId, userId))
+    .orderBy(
+      desc(collections.updatedAt),
+      asc(collections.name),
+      asc(collections.id),
+    );
+}
+
+/**
+ * Sidebar collections: every favorite plus the four most recent non-favorites,
+ * each with its dominant item-type color for the recent-collection dot.
+ */
+export async function getSidebarCollections(
+  userId: string,
+): Promise<SidebarCollections> {
+  const collectionRows = await sidebarCollectionsQuery(userId);
+  if (collectionRows.length === 0) return { favorites: [], recents: [] };
+
+  const typeRows = await collectionTypeBreakdownQuery(
+    userId,
+    collectionRows.map((row) => row.id),
+  );
+
+  return buildSidebarCollections(
+    collectionRows,
+    buildCollectionSummaries(collectionRows, typeRows),
+  );
+}
+
 /** Rolling window for `addedThisWeek`: the last seven days, not the calendar week. */
 export const ADDED_THIS_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -122,6 +170,12 @@ export function favoriteItemCountQuery(userId: string) {
     .select({ value: count() })
     .from(items)
     .where(and(eq(items.ownerId, userId), eq(items.isFavorite, true)));
+}
+
+/** Favorite item total for the sidebar's Favorites link. */
+export async function getFavoriteItemCount(userId: string): Promise<number> {
+  const [row] = await favoriteItemCountQuery(userId);
+  return row?.value ?? 0;
 }
 
 /** Owner-scoped count of favorite collections. */
