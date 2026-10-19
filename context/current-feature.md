@@ -1,20 +1,35 @@
 # Current Feature
 
-<!-- Feature name and short description -->
+**Dashboard Collections — real database data**
 
+Replace the dummy collection data in the dashboard main area with real, owner-scoped data from
+Neon PostgreSQL via Drizzle ORM. Full spec: `@context/features/dashboard-collections-spec.md`.
 
 ## Status
 
-<!-- Not Started | In Progress | Completed -->
-Completed
+Not Started
 
 ## Goals
 
-<!-- Goals and requirements -->
+- Add `src/db/queries/collections.ts` with owner-scoped read functions (recent collections with
+  item counts + per-type breakdown, and a small `getDashboardCounts`).
+- Add a server-only session helper (`getCurrentUser`) backed by Better Auth; redirect to
+  `/sign-in` when signed out.
+- Add a minimal `/sign-in` page (email + password Server Action) so the authenticated read is
+  testable with the seeded demo user (`demo@devgnosis.app` / `12345678`).
+- Render 4 recent collection cards from the DB, keeping the current design; card tint from the
+  most-used content type; small icons for all types present.
+- Wire the Items/Collections totals into the dashboard header and the first two stat cards.
+- Add loading/empty/error states, and Vitest coverage for owner scoping + dominant-type logic.
 
 ## Notes
 
-<!-- Additional notes or comments -->
+- Uses **Drizzle ORM**, not Prisma (the earlier Prisma wording in the spec was corrected).
+- Card count is **4** (matches current layout and the screenshot), not 6.
+- "Recent" = `collections.updatedAt DESC`.
+- Deferred: items list under collections, `/collections` pages, favorite counts, `addedThisWeek`,
+  and sign-out/OAuth/other auth polish. `@src/lib/mock-data.ts` stays for the sidebar, pinned
+  items, and recent items.
 
 ## History
 
