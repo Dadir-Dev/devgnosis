@@ -8,8 +8,10 @@ import { db } from "./index";
 import {
   collections,
   itemCollections,
+  itemTags,
   itemTypes,
   items,
+  tags,
   userProfiles,
 } from "./schema";
 import { user } from "./schema/auth";
@@ -111,6 +113,8 @@ type SeedItem = {
   url?: string;
   isFavorite?: boolean;
   isPinned?: boolean;
+  /** Tags are normalized (trim + lowercase) and upserted per owner. */
+  tags?: string[];
 };
 
 type SeedCollection = {
@@ -134,6 +138,7 @@ const COLLECTIONS: SeedCollection[] = [
         description:
           "Debounce a fast-changing value and persist state to localStorage.",
         language: "typescript",
+        tags: ["react", "hooks", "typescript"],
         isPinned: true,
         content: `import { useCallback, useEffect, useState } from "react";
 
@@ -170,6 +175,7 @@ export function useLocalStorage<T>(key: string, initial: T) {
         description:
           "Share state through a typed context and expose a compound component API.",
         language: "tsx",
+        tags: ["react", "typescript", "patterns"],
         content: `import { createContext, useContext, useState, type ReactNode } from "react";
 
 type TabsContextValue = { value: string; setValue: (value: string) => void };
@@ -211,6 +217,7 @@ export function Tab({ id, children }: { id: string; children: ReactNode }) {
         title: "React utility helpers",
         description: "cn class merging, composeRefs, and a range helper.",
         language: "typescript",
+        tags: ["react", "typescript", "utilities"],
         content: `import type { MutableRefObject, Ref } from "react";
 
 export function cn(...classes: Array<string | false | null | undefined>) {
@@ -242,6 +249,7 @@ export const range = (length: number) =>
         type: "prompt",
         title: "Code review prompt",
         description: "Senior reviewer persona that separates blockers from nits.",
+        tags: ["prompt", "review", "ai"],
         isFavorite: true,
         isPinned: true,
         content: `You are a senior engineer reviewing a pull request.
@@ -259,6 +267,7 @@ Separate blockers from nits, and say explicitly when you find nothing and the ch
         title: "Documentation generation prompt",
         description:
           "Turn source into reference docs with examples and edge cases.",
+        tags: ["prompt", "docs", "ai"],
         content: `Write reference documentation for the following code.
 
 Include:
@@ -274,6 +283,7 @@ Do not invent behavior. If the code is ambiguous, list the open questions instea
         type: "prompt",
         title: "Refactoring assistance prompt",
         description: "Behavior-preserving refactors with an explainable diff.",
+        tags: ["prompt", "refactor", "ai"],
         content: `Refactor the following code without changing its behavior.
 
 Constraints:
@@ -298,6 +308,7 @@ Return the refactored code followed by a short rationale.`,
         description:
           "Stage-cached production image used by the GitHub Actions deploy workflow.",
         language: "dockerfile",
+        tags: ["docker", "ci", "bun"],
         isFavorite: true,
         content: `# Stage 1: install dependencies (cached unless the lockfile changes)
 FROM oven/bun:1 AS deps
@@ -327,6 +338,7 @@ CMD ["bun", "server.js"]`,
         title: "Deployment script",
         description: "Install, migrate, build, and start in one run.",
         language: "bash",
+        tags: ["docker", "bash", "deployment"],
         content: `set -euo pipefail
 
 bun install --frozen-lockfile
@@ -340,6 +352,7 @@ bun run start`,
         title: "Docker documentation",
         description: "Official Docker guides and CLI reference.",
         url: "https://docs.docker.com/",
+        tags: ["docker", "docs"],
       },
       {
         key: "devops/github-actions-docs",
@@ -347,6 +360,7 @@ bun run start`,
         title: "GitHub Actions documentation",
         description: "Workflow syntax and CI/CD reference.",
         url: "https://docs.github.com/en/actions",
+        tags: ["github", "ci", "docs"],
       },
     ],
   },
@@ -361,6 +375,7 @@ bun run start`,
         title: "Git operations",
         description: "Inspect history and undo the last commit without losing work.",
         language: "bash",
+        tags: ["git", "bash"],
         content: `# Show a compact one-line history
 git log --oneline --graph --decorate -20
 
@@ -376,6 +391,7 @@ git log -S "search term" --oneline`,
         title: "Docker commands",
         description: "Build an image and clean up unused resources.",
         language: "bash",
+        tags: ["docker", "bash"],
         content: `# Build and tag an image
 docker build -t my-app:latest .
 
@@ -391,6 +407,7 @@ docker compose logs -f app`,
         title: "Process management",
         description: "Find and stop whatever is holding a port.",
         language: "bash",
+        tags: ["bash", "process"],
         content: `# Show what is listening on a port
 lsof -i :3000
 
@@ -406,6 +423,7 @@ lsof -ti :3000 | xargs kill -9`,
         title: "Package manager utilities (bun)",
         description: "Add, update, and audit dependencies with bun.",
         language: "bash",
+        tags: ["bun", "bash"],
         isFavorite: true,
         content: `# Add a dependency
 bun add zod
@@ -429,6 +447,7 @@ bun pm ls --all | grep zod`,
         title: "Tailwind CSS documentation",
         description: "Utility-first CSS reference and configuration.",
         url: "https://tailwindcss.com/docs",
+        tags: ["tailwind", "css", "docs"],
       },
       {
         key: "design/shadcn-ui",
@@ -436,6 +455,7 @@ bun pm ls --all | grep zod`,
         title: "shadcn/ui",
         description: "Copy-paste, accessible React components built on Radix.",
         url: "https://ui.shadcn.com/",
+        tags: ["ui", "react", "components"],
       },
       {
         key: "design/material",
@@ -443,6 +463,7 @@ bun pm ls --all | grep zod`,
         title: "Material Design 3",
         description: "Google's design system guidance and tokens.",
         url: "https://m3.material.io/",
+        tags: ["design", "ui"],
       },
       {
         key: "design/lucide",
@@ -450,6 +471,7 @@ bun pm ls --all | grep zod`,
         title: "Lucide icons",
         description: "Open-source icon set used across the app.",
         url: "https://lucide.dev/icons/",
+        tags: ["icons", "design"],
       },
     ],
   },
@@ -572,10 +594,11 @@ async function getSystemTypeIds(): Promise<Record<SystemTypeKey, string>> {
 }
 
 /**
- * Upserts the collections, their items, and the item→collection joins inside a
- * single transaction so the graph stays consistent. Collections conflict on the
+ * Upserts the collections, their items, tags, and the join rows inside a single
+ * transaction so the graph stays consistent. Collections conflict on the
  * `(owner_id, slug)` unique index and return their id; items conflict on their
- * deterministic id; joins are inserted with `ON CONFLICT DO NOTHING`.
+ * deterministic id; tags conflict on `(owner_id, normalized_name)`; joins are
+ * inserted with `ON CONFLICT DO NOTHING`.
  */
 async function seedCollectionsAndItems(
   userId: string,
@@ -641,6 +664,31 @@ async function seedCollectionsAndItems(
 
         if (!itemRow) {
           throw new Error(`Failed to upsert item "${item.key}".`);
+        }
+
+        for (const tag of item.tags ?? []) {
+          const name = tag.trim();
+          if (!name) continue;
+
+          const [tagRow] = await tx
+            .insert(tags)
+            .values({ ownerId: userId, name, normalizedName: name.toLowerCase() })
+            .onConflictDoUpdate({
+              target: [tags.ownerId, tags.normalizedName],
+              set: { name: sql`excluded.name` },
+            })
+            .returning({ id: tags.id });
+
+          if (!tagRow) {
+            throw new Error(
+              `Failed to upsert tag "${name}" for item "${item.key}".`,
+            );
+          }
+
+          await tx
+            .insert(itemTags)
+            .values({ itemId: itemRow.id, tagId: tagRow.id })
+            .onConflictDoNothing();
         }
 
         await tx

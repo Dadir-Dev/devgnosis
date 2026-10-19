@@ -3,22 +3,26 @@ import { RecentCollections } from "@/components/dashboard/recent-collections";
 import { RecentItems } from "@/components/dashboard/recent-items";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { getDashboardCounts, getRecentCollections } from "@/db/queries/collections";
+import { getPinnedItems, getRecentItems } from "@/db/queries/items";
 import { requireUser } from "@/lib/auth-session";
 import { dashboardStats } from "@/lib/mock-data";
 
 /**
  * Dashboard main area: greeting, summary stats, pinned items, recent
- * collections, and the ten most recent items. Collections and the
- * item/collection totals come from owner-scoped database queries; the pinned
- * items, recent items, favorites, and sidebar still read the mock data module.
+ * collections, and the ten most recent items. Stats, collections, pinned items,
+ * and recent items all come from owner-scoped database queries; only the
+ * greeting (and the sidebar) still read the mock data module.
  */
 export default async function DashboardPage() {
   const user = await requireUser();
 
-  const [recentCollections, counts] = await Promise.all([
-    getRecentCollections(user.id),
-    getDashboardCounts(user.id),
-  ]);
+  const [recentCollections, counts, pinnedItems, recentItems] =
+    await Promise.all([
+      getRecentCollections(user.id),
+      getDashboardCounts(user.id),
+      getPinnedItems(user.id),
+      getRecentItems(user.id),
+    ]);
 
   const firstName = user.name.trim().split(/\s+/)[0] || user.name;
 
@@ -30,17 +34,14 @@ export default async function DashboardPage() {
         </h1>
         <p className="text-sm text-muted-foreground">
           {counts.items} items across {counts.collections} collections ·{" "}
-          {dashboardStats.addedThisWeek} added this week
+          {counts.addedThisWeek} added this week
         </p>
       </div>
 
-      <StatsCards
-        itemCount={counts.items}
-        collectionCount={counts.collections}
-      />
-      <PinnedItems />
+      <StatsCards counts={counts} />
+      <PinnedItems items={pinnedItems} />
       <RecentCollections collections={recentCollections} />
-      <RecentItems />
+      <RecentItems items={recentItems} />
     </div>
   );
 }

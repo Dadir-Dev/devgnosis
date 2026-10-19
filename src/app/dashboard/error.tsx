@@ -21,7 +21,7 @@ export default function DashboardError({ error, retry }: DashboardErrorProps) {
         We couldn&apos;t load your dashboard
       </h2>
       <p className="text-sm text-muted-foreground">
-        Something went wrong while loading your collections. Try again in a
+        Something went wrong while loading your dashboard. Try again in a
         moment.
       </p>
       <Button type="button" onClick={() => retry()}>

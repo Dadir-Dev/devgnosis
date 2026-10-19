@@ -3,11 +3,8 @@ import { Check, MoreHorizontal, Pin, Star } from "lucide-react";
 import { ItemTypeIcon } from "@/components/dashboard/item-type-icon";
 import { RelativeTime } from "@/components/dashboard/relative-time";
 import { SectionHeading } from "@/components/dashboard/section-heading";
-import { getItemTypeById } from "@/lib/item-types";
-import { items, type MockItem } from "@/lib/mock-data";
+import type { DashboardItem } from "@/features/items/dashboard-items";
 import { cn } from "@/lib/utils";
-
-const pinnedItems = items.filter((item) => item.isPinned);
 
 /** Renders a checklist body, turning `- [ ]` / `- [x]` lines into checkboxes. */
 function ChecklistPreview({ content }: { content: string }) {
@@ -44,32 +41,57 @@ function ChecklistPreview({ content }: { content: string }) {
   );
 }
 
-/** Body preview: monospace for code, a checklist for to-do notes, prose otherwise. */
-function ItemContentPreview({ item }: { item: MockItem }) {
-  if (!item.content) return null;
+/** The URL's hostname, falling back to the raw value when it cannot be parsed. */
+function displayUrl(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}
 
-  if (item.language) {
+/**
+ * Body preview: monospace for code, a checklist for to-do notes, prose
+ * otherwise, and a muted URL/file name for link and file items.
+ */
+function ItemContentPreview({ item }: { item: DashboardItem }) {
+  if (item.content) {
+    if (item.language) {
+      return (
+        <pre className="overflow-hidden rounded-md bg-muted/50 p-3 font-mono text-xs leading-relaxed text-muted-foreground whitespace-pre-wrap">
+          {item.content}
+        </pre>
+      );
+    }
+
+    if (item.content.split("\n").some((line) => /^- \[[ x]\] /.test(line))) {
+      return <ChecklistPreview content={item.content} />;
+    }
+
+    return <p className="text-sm text-muted-foreground whitespace-pre-line">{item.content}</p>;
+  }
+
+  if (item.url) {
     return (
-      <pre className="overflow-hidden rounded-md bg-muted/50 p-3 font-mono text-xs leading-relaxed text-muted-foreground whitespace-pre-wrap">
-        {item.content}
-      </pre>
+      <p className="truncate text-sm text-muted-foreground">{displayUrl(item.url)}</p>
     );
   }
 
-  if (item.content.split("\n").some((line) => /^- \[[ x]\] /.test(line))) {
-    return <ChecklistPreview content={item.content} />;
+  if (item.fileName) {
+    return <p className="truncate text-sm text-muted-foreground">{item.fileName}</p>;
   }
 
-  return <p className="text-sm text-muted-foreground whitespace-pre-line">{item.content}</p>;
+  return null;
 }
 
-function PinnedItemCard({ item }: { item: MockItem }) {
-  const type = getItemTypeById(item.itemTypeId);
-
+function PinnedItemCard({ item }: { item: DashboardItem }) {
   return (
-    <article className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+    <article
+      className="flex flex-col gap-3 rounded-lg border p-4"
+      style={{ backgroundColor: `${item.type.color}14`, borderColor: `${item.type.color}33` }}
+    >
       <header className="flex items-center gap-2">
-        <ItemTypeIcon type={type} />
+        <ItemTypeIcon type={item.type} />
         <h3 className="min-w-0 flex-1 truncate text-sm font-medium">{item.title}</h3>
         <Pin aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground" />
         {item.isFavorite ? (
@@ -96,15 +118,19 @@ function PinnedItemCard({ item }: { item: MockItem }) {
   );
 }
 
+type PinnedItemsProps = {
+  items: DashboardItem[];
+};
+
 /** Pinned items shown as two-up cards at the top of the dashboard. */
-export function PinnedItems() {
-  if (pinnedItems.length === 0) return null;
+export function PinnedItems({ items }: PinnedItemsProps) {
+  if (items.length === 0) return null;
 
   return (
     <section className="flex flex-col gap-3">
       <SectionHeading icon={Pin}>Pinned</SectionHeading>
       <div className="grid gap-4 md:grid-cols-2">
-        {pinnedItems.map((item) => (
+        {items.map((item) => (
           <PinnedItemCard key={item.id} item={item} />
         ))}
       </div>

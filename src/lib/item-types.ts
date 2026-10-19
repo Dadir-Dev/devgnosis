@@ -10,7 +10,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { itemTypes, type MockItemType } from "@/lib/mock-data";
 import type { SystemItemTypeKey } from "@/lib/system-item-types";
 
 const SYSTEM_TYPE_ICONS = {
@@ -32,10 +31,3 @@ export const TYPE_ICONS: Readonly<Record<string, LucideIcon>> = SYSTEM_TYPE_ICON
 
 /** Icon used when a type key has no mapping (e.g. a future custom type). */
 export const FALLBACK_TYPE_ICON: LucideIcon = Shapes;
-
-const ITEM_TYPES_BY_ID = new Map(itemTypes.map((type) => [type.id, type]));
-
-/** Resolve a mock item type by id; undefined for null or unknown ids. */
-export function getItemTypeById(id: string | null): MockItemType | undefined {
-  return id ? ITEM_TYPES_BY_ID.get(id) : undefined;
-}

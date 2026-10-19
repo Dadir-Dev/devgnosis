@@ -31,6 +31,10 @@ export type CollectionSummary = {
 export type DashboardCounts = {
   items: number;
   collections: number;
+  favoriteItems: number;
+  favoriteCollections: number;
+  /** Items created in the last rolling 7 days (not the calendar week). */
+  addedThisWeek: number;
 };
 
 /** Columns selected for each collection card. Derived from the Drizzle schema. */
