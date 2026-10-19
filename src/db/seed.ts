@@ -109,12 +109,15 @@ type SeedItem = {
   language?: string;
   content?: string;
   url?: string;
+  isFavorite?: boolean;
+  isPinned?: boolean;
 };
 
 type SeedCollection = {
   slug: string;
   name: string;
   description: string;
+  isFavorite?: boolean;
   items: SeedItem[];
 };
 
@@ -131,6 +134,7 @@ const COLLECTIONS: SeedCollection[] = [
         description:
           "Debounce a fast-changing value and persist state to localStorage.",
         language: "typescript",
+        isPinned: true,
         content: `import { useCallback, useEffect, useState } from "react";
 
 export function useDebounce<T>(value: T, delay = 300): T {
@@ -231,12 +235,15 @@ export const range = (length: number) =>
     slug: "ai-workflows",
     name: "AI Workflows",
     description: "AI prompts and workflow automations",
+    isFavorite: true,
     items: [
       {
         key: "ai-workflows/code-review",
         type: "prompt",
         title: "Code review prompt",
         description: "Senior reviewer persona that separates blockers from nits.",
+        isFavorite: true,
+        isPinned: true,
         content: `You are a senior engineer reviewing a pull request.
 
 Focus on correctness, security, and readability, in that order. For each finding:
@@ -282,6 +289,7 @@ Return the refactored code followed by a short rationale.`,
     slug: "devops",
     name: "DevOps",
     description: "Infrastructure and deployment resources",
+    isFavorite: true,
     items: [
       {
         key: "devops/docker-ci",
@@ -290,6 +298,7 @@ Return the refactored code followed by a short rationale.`,
         description:
           "Stage-cached production image used by the GitHub Actions deploy workflow.",
         language: "dockerfile",
+        isFavorite: true,
         content: `# Stage 1: install dependencies (cached unless the lockfile changes)
 FROM oven/bun:1 AS deps
 WORKDIR /app
@@ -397,6 +406,7 @@ lsof -ti :3000 | xargs kill -9`,
         title: "Package manager utilities (bun)",
         description: "Add, update, and audit dependencies with bun.",
         language: "bash",
+        isFavorite: true,
         content: `# Add a dependency
 bun add zod
 
@@ -581,12 +591,14 @@ async function seedCollectionsAndItems(
           slug: collection.slug,
           name: collection.name,
           description: collection.description,
+          isFavorite: collection.isFavorite ?? false,
         })
         .onConflictDoUpdate({
           target: [collections.ownerId, collections.slug],
           set: {
             name: sql`excluded.name`,
             description: sql`excluded.description`,
+            isFavorite: sql`excluded.is_favorite`,
             updatedAt: sql`now()`,
           },
         })
@@ -608,6 +620,8 @@ async function seedCollectionsAndItems(
             content: item.content ?? null,
             url: item.url ?? null,
             language: item.language ?? null,
+            isFavorite: item.isFavorite ?? false,
+            isPinned: item.isPinned ?? false,
           })
           .onConflictDoUpdate({
             target: items.id,
@@ -618,6 +632,8 @@ async function seedCollectionsAndItems(
               content: sql`excluded.content`,
               url: sql`excluded.url`,
               language: sql`excluded.language`,
+              isFavorite: sql`excluded.is_favorite`,
+              isPinned: sql`excluded.is_pinned`,
               updatedAt: sql`now()`,
             },
           })
