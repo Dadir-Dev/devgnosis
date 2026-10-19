@@ -94,8 +94,6 @@ values still read from mock data are:
 
 ## Follow-up
 
-- `src/lib/mock-data.ts` is now unused and should be deleted after this
-  feature is verified in the browser. It was intentionally left in place for
-  this implementation.
+- `src/lib/mock-data.ts` was deleted after browser verification.
 - Implement `/collections` and `/items/[type]` so the sidebar and collection
   card links resolve.
