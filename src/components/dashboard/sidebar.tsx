@@ -8,7 +8,7 @@ import {
   ChevronsRight,
   Clock,
   CodeXml,
-  Folder,
+  FolderOpen,
   House,
   Lock,
   Menu,
@@ -22,22 +22,14 @@ import {
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
+import type {
+  SidebarCollection,
+  SidebarItemType,
+} from "@/features/dashboard/sidebar";
 import { FALLBACK_TYPE_ICON, TYPE_ICONS } from "@/lib/item-types";
-import { collections, currentUser, itemTypes, items } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 import { useSidebar } from "./sidebar-context";
-
-/** Favorites pinned near the top of the collections list. */
-const favoriteCollections = collections.filter((collection) => collection.isFavorite);
-
-/** Newest collections, excluding the ones already shown as favorites. */
-const recentCollections = collections
-  .filter((collection) => !collection.isFavorite)
-  .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
-  .slice(0, 4);
-
-const favoriteItemCount = items.filter((item) => item.isFavorite).length;
 
 function isPathActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -46,7 +38,7 @@ function isPathActive(pathname: string, href: string) {
 
 type SidebarNavLinkProps = {
   href: string;
-  icon: LucideIcon;
+  icon?: LucideIcon;
   label: string;
   collapsed: boolean;
   active: boolean;
@@ -55,6 +47,8 @@ type SidebarNavLinkProps = {
   trailing?: ReactNode;
   /** Runtime color token for item types; the documented inline-style exception. */
   iconColor?: string;
+  /** Recent collections use a dominant-type dot instead of a Lucide icon. */
+  dotColor?: string;
 };
 
 function SidebarNavLink({
@@ -66,6 +60,7 @@ function SidebarNavLink({
   onNavigate,
   trailing,
   iconColor,
+  dotColor,
 }: SidebarNavLinkProps) {
   return (
     <Link
@@ -82,11 +77,23 @@ function SidebarNavLink({
         collapsed && "justify-center px-0",
       )}
     >
-      <Icon
-        aria-hidden="true"
-        className="size-4 shrink-0"
-        style={iconColor ? { color: iconColor } : undefined}
-      />
+      {Icon ? (
+        <Icon
+          aria-hidden="true"
+          className="size-4 shrink-0"
+          style={iconColor ? { color: iconColor } : undefined}
+        />
+      ) : dotColor ? (
+        <span
+          aria-hidden="true"
+          className="grid size-4 shrink-0 place-items-center"
+        >
+          <span
+            className="size-2.5 rounded-full"
+            style={{ backgroundColor: dotColor }}
+          />
+        </span>
+      ) : null}
       {!collapsed && <span className="min-w-0 flex-1 truncate">{label}</span>}
       {!collapsed && trailing}
     </Link>
@@ -170,15 +177,32 @@ function SidebarHeader({ collapsed, mobile, onClose }: SidebarHeaderProps) {
   );
 }
 
-type SidebarPanelProps = {
+type SidebarDataProps = {
+  user: { name: string; email: string };
+  itemTypes: SidebarItemType[];
+  favoriteCollections: SidebarCollection[];
+  recentCollections: SidebarCollection[];
+  favoriteItemCount: number;
+};
+
+type SidebarPanelProps = SidebarDataProps & {
   collapsed: boolean;
   mobile?: boolean;
   onNavigate?: () => void;
 };
 
-function SidebarPanel({ collapsed, mobile = false, onNavigate }: SidebarPanelProps) {
+function SidebarPanel({
+  collapsed,
+  mobile = false,
+  onNavigate,
+  user,
+  itemTypes,
+  favoriteCollections,
+  recentCollections,
+  favoriteItemCount,
+}: SidebarPanelProps) {
   const pathname = usePathname();
-  const initials = currentUser.name.slice(0, 1).toUpperCase();
+  const initials = user.name.slice(0, 1).toUpperCase();
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -235,13 +259,13 @@ function SidebarPanel({ collapsed, mobile = false, onNavigate }: SidebarPanelPro
             key={type.id}
             href={`/items/${type.key}`}
             icon={TYPE_ICONS[type.key] ?? FALLBACK_TYPE_ICON}
-            label={type.name}
+            label={type.label}
             iconColor={type.color}
             collapsed={collapsed}
             active={isPathActive(pathname, `/items/${type.key}`)}
             onNavigate={onNavigate}
             trailing={
-              type.isPro ? (
+              type.isLocked ? (
                 <span className="inline-flex items-center gap-1 text-[0.65rem] font-semibold text-muted-foreground">
                   <Lock aria-hidden="true" className="size-3" />
                   PRO
@@ -279,13 +303,21 @@ function SidebarPanel({ collapsed, mobile = false, onNavigate }: SidebarPanelPro
           <SidebarNavLink
             key={collection.id}
             href={`/collections/${collection.slug}`}
-            icon={Folder}
+            dotColor={collection.dominantColor}
             label={collection.name}
             collapsed={collapsed}
             active={isPathActive(pathname, `/collections/${collection.slug}`)}
             onNavigate={onNavigate}
           />
         ))}
+        <SidebarNavLink
+          href="/collections"
+          icon={FolderOpen}
+          label="View all collections"
+          collapsed={collapsed}
+          active={pathname === "/collections"}
+          onNavigate={onNavigate}
+        />
       </nav>
 
       <div className="border-t border-sidebar-border p-2">
@@ -323,12 +355,12 @@ function SidebarPanel({ collapsed, mobile = false, onNavigate }: SidebarPanelPro
             {initials}
           </span>
           {collapsed ? (
-            <span className="sr-only">{`${currentUser.name} — ${currentUser.email}`}</span>
+            <span className="sr-only">{`${user.name} — ${user.email}`}</span>
           ) : (
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-medium">{currentUser.name}</span>
+              <span className="block truncate text-sm font-medium">{user.name}</span>
               <span className="block truncate text-xs text-muted-foreground">
-                {currentUser.email}
+                {user.email}
               </span>
             </span>
           )}
@@ -342,7 +374,13 @@ function SidebarPanel({ collapsed, mobile = false, onNavigate }: SidebarPanelPro
  * Dashboard sidebar. A collapsible rail on desktop and a modal drawer on
  * mobile; both render the same navigation panel.
  */
-export function Sidebar() {
+export function Sidebar({
+  user,
+  itemTypes,
+  favoriteCollections,
+  recentCollections,
+  favoriteItemCount,
+}: SidebarDataProps) {
   const { isCollapsed, isMobileOpen, setMobileOpen } = useSidebar();
 
   return (
@@ -354,7 +392,14 @@ export function Sidebar() {
           isCollapsed ? "w-16" : "w-64",
         )}
       >
-        <SidebarPanel collapsed={isCollapsed} />
+        <SidebarPanel
+          collapsed={isCollapsed}
+          user={user}
+          itemTypes={itemTypes}
+          favoriteCollections={favoriteCollections}
+          recentCollections={recentCollections}
+          favoriteItemCount={favoriteItemCount}
+        />
       </aside>
 
       <Dialog.Root open={isMobileOpen} onOpenChange={setMobileOpen}>
@@ -365,7 +410,16 @@ export function Sidebar() {
             className="fixed inset-y-0 left-0 z-50 flex w-64 max-w-[80vw] flex-col border-r border-sidebar-border bg-sidebar shadow-xl outline-none data-[state=closed]:animate-out data-[state=open]:animate-in data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left motion-reduce:animate-none md:hidden"
           >
             <Dialog.Title className="sr-only">Dashboard navigation</Dialog.Title>
-            <SidebarPanel collapsed={false} mobile onNavigate={() => setMobileOpen(false)} />
+            <SidebarPanel
+              collapsed={false}
+              mobile
+              onNavigate={() => setMobileOpen(false)}
+              user={user}
+              itemTypes={itemTypes}
+              favoriteCollections={favoriteCollections}
+              recentCollections={recentCollections}
+              favoriteItemCount={favoriteItemCount}
+            />
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
