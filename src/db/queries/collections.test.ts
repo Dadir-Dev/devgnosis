@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  collectionCountQuery,
   collectionTypeBreakdownQuery,
+  itemCountQuery,
   recentCollectionsQuery,
 } from "./collections";
 
@@ -46,5 +48,25 @@ describe("collectionTypeBreakdownQuery", () => {
     expect(sql).toContain("group by");
     expect(sql).toContain('"item_collections"."collection_id"');
     expect(sql).toContain('"item_types"."id"');
+  });
+});
+
+describe("dashboard count queries", () => {
+  it("scopes the item total to the resolved owner", () => {
+    const { sql, params } = itemCountQuery(OWNER_ID).toSQL();
+
+    expect(sql).toContain('from "items"');
+    expect(sql).toContain('"items"."owner_id"');
+    expect(params).toContain(OWNER_ID);
+    expect(params).not.toContain(OTHER_USER_ID);
+  });
+
+  it("scopes the collection total to the resolved owner", () => {
+    const { sql, params } = collectionCountQuery(OWNER_ID).toSQL();
+
+    expect(sql).toContain('from "collections"');
+    expect(sql).toContain('"collections"."owner_id"');
+    expect(params).toContain(OWNER_ID);
+    expect(params).not.toContain(OTHER_USER_ID);
   });
 });

@@ -90,19 +90,29 @@ export async function getRecentCollections(
   return buildCollectionSummaries(collectionRows, typeRows);
 }
 
+/** Owner-scoped item total for the dashboard header and stats. */
+export function itemCountQuery(userId: string) {
+  return db
+    .select({ value: count() })
+    .from(items)
+    .where(eq(items.ownerId, userId));
+}
+
+/** Owner-scoped collection total for the dashboard header and stats. */
+export function collectionCountQuery(userId: string) {
+  return db
+    .select({ value: count() })
+    .from(collections)
+    .where(eq(collections.ownerId, userId));
+}
+
 /** Owner-scoped item and collection totals for the dashboard header and stats. */
 export async function getDashboardCounts(
   userId: string,
 ): Promise<DashboardCounts> {
   const [itemRows, collectionRows] = await Promise.all([
-    db
-      .select({ value: count() })
-      .from(items)
-      .where(eq(items.ownerId, userId)),
-    db
-      .select({ value: count() })
-      .from(collections)
-      .where(eq(collections.ownerId, userId)),
+    itemCountQuery(userId),
+    collectionCountQuery(userId),
   ]);
 
   return {
