@@ -72,7 +72,7 @@ The following are valuable, but should not delay a polished library MVP:
 | Capability             | Free | Pro — $5/month |
 | ---------------------- | ---: | -------------: |
 | Total items            |   50 |      Unlimited |
-| Collections            |    3 |      Unlimited |
+| Collections            |    5 |      Unlimited |
 | Text and link types    |  Yes |            Yes |
 | File and image uploads |    — |            Yes |
 | Basic search           |  Yes |            Yes |
