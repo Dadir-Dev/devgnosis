@@ -22,7 +22,7 @@ import {
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
-import { TYPE_ICONS } from "@/lib/item-types";
+import { FALLBACK_TYPE_ICON, TYPE_ICONS } from "@/lib/item-types";
 import { collections, currentUser, itemTypes, items } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
@@ -234,7 +234,7 @@ function SidebarPanel({ collapsed, mobile = false, onNavigate }: SidebarPanelPro
           <SidebarNavLink
             key={type.id}
             href={`/items/${type.key}`}
-            icon={TYPE_ICONS[type.key]}
+            icon={TYPE_ICONS[type.key] ?? FALLBACK_TYPE_ICON}
             label={type.name}
             iconColor={type.color}
             collapsed={collapsed}

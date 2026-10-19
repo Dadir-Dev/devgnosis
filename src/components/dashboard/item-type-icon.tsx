@@ -1,9 +1,9 @@
-import { TYPE_ICONS } from "@/lib/item-types";
-import type { MockItemType } from "@/lib/mock-data";
+import { FALLBACK_TYPE_ICON, TYPE_ICONS } from "@/lib/item-types";
 import { cn } from "@/lib/utils";
 
 type ItemTypeIconProps = {
-  type?: MockItemType;
+  /** Minimal structural shape shared by mock and database-derived types. */
+  type?: { key: string; color: string } | null;
   className?: string;
 };
 
@@ -14,7 +14,7 @@ type ItemTypeIconProps = {
 export function ItemTypeIcon({ type, className }: ItemTypeIconProps) {
   if (!type) return null;
 
-  const Icon = TYPE_ICONS[type.key];
+  const Icon = TYPE_ICONS[type.key] ?? FALLBACK_TYPE_ICON;
 
   return (
     <span
