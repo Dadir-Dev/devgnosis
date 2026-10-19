@@ -23,6 +23,8 @@ describe("recentCollectionsQuery", () => {
     const { sql } = recentCollectionsQuery(OWNER_ID, 4).toSQL();
 
     expect(sql).toContain('order by "collections"."updated_at" desc');
+    expect(sql).toContain('"collections"."name" asc');
+    expect(sql).toContain('"collections"."id" asc');
     expect(sql).toContain("limit");
   });
 });

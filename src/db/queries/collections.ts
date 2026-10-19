@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, count, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db";
 import { collections, itemCollections, itemTypes, items } from "@/db/schema";
@@ -19,7 +19,10 @@ import {
 
 /**
  * Base rows for the "recent collections" cards. "Recent" is `updatedAt DESC`,
- * which the `collections_owner_updated_idx` index covers.
+ * which the `collections_owner_updated_idx` index covers. `name`/`id` break
+ * ties deterministically: the seed writes every collection in one transaction,
+ * so all rows share `updated_at = now()` and the 4-of-5 slice would otherwise
+ * be arbitrary (and change between requests).
  */
 export function recentCollectionsQuery(userId: string, limit: number) {
   return db
@@ -31,7 +34,11 @@ export function recentCollectionsQuery(userId: string, limit: number) {
     })
     .from(collections)
     .where(eq(collections.ownerId, userId))
-    .orderBy(desc(collections.updatedAt))
+    .orderBy(
+      desc(collections.updatedAt),
+      asc(collections.name),
+      asc(collections.id),
+    )
     .limit(limit);
 }
 
