@@ -1,5 +1,6 @@
 import { Check, MoreHorizontal, Pin, Star } from "lucide-react";
 
+import { CodeBlock } from "@/components/dashboard/code-block";
 import { ItemTypeIcon } from "@/components/dashboard/item-type-icon";
 import { RelativeTime } from "@/components/dashboard/relative-time";
 import { SectionHeading } from "@/components/dashboard/section-heading";
@@ -57,11 +58,7 @@ function displayUrl(url: string): string {
 function ItemContentPreview({ item }: { item: DashboardItem }) {
   if (item.content) {
     if (item.language) {
-      return (
-        <pre className="overflow-hidden rounded-md bg-muted/50 p-3 font-mono text-xs leading-relaxed text-muted-foreground whitespace-pre-wrap">
-          {item.content}
-        </pre>
-      );
+      return <CodeBlock code={item.content} language={item.language} />;
     }
 
     if (item.content.split("\n").some((line) => /^- \[[ x]\] /.test(line))) {
