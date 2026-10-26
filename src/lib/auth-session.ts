@@ -36,3 +36,15 @@ export async function requireUser(): Promise<AuthUser> {
 
   return user;
 }
+
+/**
+ * Keep an existing session out of the auth pages, so a signed-in browser lands
+ * on the dashboard instead of a sign-in form it cannot use.
+ */
+export async function requireGuest(): Promise<void> {
+  const user = await getCurrentUser();
+
+  if (user) {
+    redirect("/dashboard");
+  }
+}

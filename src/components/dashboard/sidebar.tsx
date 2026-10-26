@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { SignOutButton } from "@/components/auth/sign-out-button";
 import { Button } from "@/components/ui/button";
 import type {
   SidebarCollection,
@@ -347,7 +348,12 @@ function SidebarPanel({
           {collapsed && <span className="sr-only">Theme: Dark</span>}
         </div>
 
-        <div className={cn("mt-1 flex items-center gap-2 rounded-lg p-2", collapsed && "justify-center p-1")}>
+        <div
+          className={cn(
+            "mt-1 flex items-center gap-2 rounded-lg p-2",
+            collapsed && "flex-col justify-center gap-1 p-1",
+          )}
+        >
           <span
             aria-hidden="true"
             className="grid size-8 shrink-0 place-items-center rounded-full bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground"
@@ -364,6 +370,7 @@ function SidebarPanel({
               </span>
             </span>
           )}
+          <SignOutButton />
         </div>
       </div>
     </div>

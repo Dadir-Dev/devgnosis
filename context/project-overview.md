@@ -178,7 +178,7 @@ flowchart TB
 - [Next.js](https://nextjs.org/) with React and TypeScript; use Server Components for reading and client components only for interactive surfaces.
 - [Tailwind CSS](https://tailwindcss.com/) v4 and [shadcn/ui](https://ui.shadcn.com/) for accessible primitives and app-specific composition.
 - [Neon](https://neon.com/) PostgreSQL with [Drizzle ORM](https://orm.drizzle.team/); schema changes go through versioned migrations only.
-- [Better Auth](https://www.better-auth.com/) for email/password and GitHub OAuth. Keep its generated/managed tables separate from application profile data.
+- [Better Auth](https://www.better-auth.com/) for email/password and GitHub/Google OAuth. Keep its generated/managed tables separate from application profile data.
 - [Cloudflare R2](https://www.cloudflare.com/developer-platform/products/r2/) for binary objects. Store object keys and metadata in Postgres, not a public URL as the source of truth.
 - Stripe for billing and subscription webhooks.
 - Zod schemas shared by forms, server actions/route handlers, and AI tool inputs.
