@@ -115,7 +115,7 @@ src/
 
 ## Authentication, billing, and entitlements
 
-- Use Better Auth for email/password and GitHub OAuth. Keep its managed tables/contracts distinct from app profile and subscription data.
+- Use Better Auth for email/password and GitHub/Google OAuth. Keep its managed tables/contracts distinct from app profile and subscription data.
 - Treat Stripe webhooks as the billing-event source of truth. Verify webhook signatures before parsing the event; persist event identifiers and process events idempotently.
 - Derive effective access from plan and subscription status, not a lone mutable `isPro` boolean.
 - Enforce Free limits and Pro-only capabilities in server-side services/handlers. UI gating improves clarity; it is not authorization.

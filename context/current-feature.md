@@ -2,6 +2,7 @@
 
 <!-- Feature name and short description -->
 
+**Sign-up & OAuth Providers — Email, GitHub & Google**
 
 ## Status
 
@@ -11,19 +12,34 @@ Completed
 ## Goals
 
 <!-- Goals and requirements -->
-Completed per `@context/features/stats-sidebar-spec.md`: wired the dashboard
-sidebar to owner-scoped Neon data (system item types with live counts and
-plan-aware PRO badges, favorite/recent collections, user identity, Favorites
-count) and removed the last `mock-data` imports from the dashboard.
+Implement `@context/features/oauth-providers-spec.md`: a dedicated `/sign-up`
+page with email/password registration, plus GitHub and Google OAuth on both
+`/sign-in` and `/sign-up`. First-time OAuth users are provisioned automatically;
+existing email/password sign-in is unchanged.
 
 ## Notes
 
 <!-- Additional notes or comments -->
-- `src/lib/mock-data.ts` was deleted; no dashboard imports remain.
-- `/collections` and `/items/[type]` pages are deferred, so their links still
-  404 until those features land.
-- `src/app/dashboard/layout.tsx` sets `instant = false` because the
-  authenticated shell reads the session and sidebar data on every request.
+- Session UX (follow-up on `feature/auth-signup-oauth`): added `signOutAction`
+  and a sidebar sign-out control, because the app previously had no way to end a
+  session from the UI. `/sign-in` and `/sign-up` now call `requireGuest()` so a
+  signed-in browser is redirected to `/dashboard` instead of seeing an unusable
+  form. Verified: signed-out `/dashboard` → 307 `/sign-in`; signed-in
+  `/sign-in` and `/sign-up` → 307 `/dashboard`; sign-out clears the Better Auth
+  cookies and `/dashboard` redirects again.
+- Production origin: `https://devgnosis.vercel.app`.
+- Planned branch: `feature/auth-signup-oauth`.
+- Requires a Better Auth route handler at `src/app/api/auth/[...all]/route.ts`;
+  OAuth callbacks cannot work without it.
+- No database migration: the existing `account` table is sufficient.
+- GitHub needs separate OAuth apps for localhost and production; Google can use
+  one client with multiple redirect URIs.
+- Vercel env vars: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`,
+  `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, plus `BETTER_AUTH_URL`.
+- Security: keep Better Auth's default `requireLocalEmailVerified: true`; do not
+  weaken account linking.
+- Email verification, password reset, sign-out, and preview-deployment OAuth
+  remain out of scope.
 
 ## History
 
@@ -70,4 +86,7 @@ Completed on branch `feature/stats-sidebar-data`, per `@context/features/stats-s
 
 **Pinned Items — syntax highlighting** (fix/pinned-syntax-highlighting)
 The pinned cards rendered snippet/command content as plain monospace text; no highlighter was ever wired up. Added a reusable `src/components/dashboard/code-block.tsx` (server-only) that highlights with a fine-grained Shiki bundle (`shiki/core` + pure-JS regex engine, so no WASM): One Dark Pro / One Light dual themes emitted as `--shiki-*` CSS variables and resolved by the new `.code-highlight` rules in `src/app/globals.css`. `PinnedItems` now renders code through `CodeBlock`, keyed on the item's stored `language`. The language mapping lives in pure, tested `src/features/items/code-language.ts` (`CODE_LANGUAGES` + `resolveCodeLanguage`): canonical grammars typescript/tsx/jsx/javascript, bash, dockerfile, json/yaml/css/html/sql/python/go/rust/markdown, aliases (`ts`, `js`, `react`/`reactjs`→tsx, `node`/`mjs`/`cjs`→javascript, `sh`/`shell`/`zsh`→bash, `docker`→dockerfile, `htm`, `yml`, `md`/`mdx`, `py`, `golang`), case/whitespace normalization, and a plain-`text` fallback for unknown values. `code-language.test.ts` locks the alias/normalization/fallback behavior; Vitest is 49/49. Prompt/Note prose, links, and files are unchanged. Lint, typegen + type-check, and production build pass. Status: Completed.
+
+**Sign-up & OAuth Providers — Email, GitHub & Google**
+Completed on branch `feature/auth-signup-oauth`, per `@context/features/oauth-providers-spec.md`: added a dedicated `/sign-up` route with email/password registration and shared GitHub/Google buttons on both auth pages. Added paired optional OAuth env validation (`src/lib/env.ts`; a half-configured pair fails startup, blank values count as absent), conditional `socialProviders` plus `account.encryptOAuthTokens` in `src/lib/auth.ts`, the Better Auth route handler at `src/app/api/auth/[...all]/route.ts`, `signInWithProviderAction`/`signUpAction` with Zod schemas in `src/features/auth/schemas.ts`, pure provider resolution in `src/features/auth/oauth-providers.ts`, inline brand SVGs, the sign-up form, and the `/sign-in` ↔ `/sign-up` links. Both pages stay Server Components and pass only `OAuthProvider[]`; no OAuth UI renders when credentials are absent, and `?error=oauth` messages are shown even when Better Auth appends its own `error` code. Added `export const instant = false` to both auth pages because they read `searchParams` and cannot produce a static shell. Vitest: 79 tests passing (provider resolution, env pair validation, form/OAuth schemas, action error mapping). Lint, typegen + type-check, production build, and runtime smoke tests with and without OAuth credentials pass. Status: Completed.
 
