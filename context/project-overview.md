@@ -185,6 +185,20 @@ flowchart TB
 
 **Migration rule:** never use `db push` against shared or production databases. Generate reviewed Drizzle migrations, apply them in development/CI, then promote the same migrations to production.
 
+### Environments
+
+One Neon branch per environment, mapped to the matching Vercel environment scope.
+
+| Environment | Neon branch | Where the URL lives | Notes |
+| --- | --- | --- | --- |
+| Local development | `development` | `.env` on the developer machine | Seeded with the demo user |
+| Vercel Preview | `preview` | Vercel → Preview scope | Email/password only; OAuth callbacks are not registered for preview URLs |
+| Vercel Production | `production` | Vercel → Production scope | Never seeded with demo data |
+
+- Branch a new environment from `production`, not `development`, so previews start from the schema production actually runs.
+- Apply the reviewed migration artifact to each branch. A branch missing the latest migration is a bug, not a shortcut.
+- Production is the default Neon branch, so stray branch creation and restores default to the safer parent.
+
 ### Boundary and security rules
 
 - Derive the authenticated user on the server for every protected request; never accept `userId` from the client.

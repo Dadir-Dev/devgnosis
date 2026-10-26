@@ -100,6 +100,8 @@ src/
 - Generate, review, and commit Drizzle migrations for every schema change. Migrations are immutable once shared or deployed.
 - **Never use `drizzle-kit push` / `db push` against shared or production databases.** Do not modify a shared database directly.
 - Apply the same reviewed migration artifacts in development, CI, staging, and production. Run migration status/consistency checks in CI before deployment.
+- Use one Neon branch per environment (`development`, `preview`, `production`). Preview deployments and local development must never point at the production branch.
+- Never run `db:seed` against the production branch: it provisions a demo account with a known password.
 - Use transactions for multi-step invariants, such as an item plus its collection/tag join rows, and make webhook processing idempotent.
 - Add indexes based on access patterns. Baseline indexes include owner-plus-updated timestamp, owner-plus-type, join-table composite keys, and the GIN index that supports full-text search.
 - Enforce structural invariants with foreign keys, unique constraints, and `CHECK` constraints where possible; enforce cross-table ownership invariants in a transaction/service layer.
