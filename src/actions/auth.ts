@@ -190,3 +190,19 @@ export async function signUpAction(
   redirect("/dashboard");
 }
 
+/**
+ * End the current session. Better Auth clears the session cookie through the
+ * `nextCookies` plugin; a missing or already-invalid session still lands the
+ * user on `/sign-in` instead of surfacing an error.
+ */
+export async function signOutAction(): Promise<void> {
+  try {
+    await auth.api.signOut({ headers: await headers() });
+  } catch {
+    // Nothing to revoke — fall through to the redirect below.
+  }
+
+  // `redirect` throws, so it stays outside the try/catch.
+  redirect("/sign-in");
+}
+
