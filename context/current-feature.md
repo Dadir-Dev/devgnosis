@@ -2,44 +2,20 @@
 
 <!-- Feature name and short description -->
 
-**Sign-up & OAuth Providers — Email, GitHub & Google**
+**No active feature**
 
 ## Status
 
 <!-- Not Started | In Progress | Completed -->
-Completed
+Not Started
 
 ## Goals
 
 <!-- Goals and requirements -->
-Implement `@context/features/oauth-providers-spec.md`: a dedicated `/sign-up`
-page with email/password registration, plus GitHub and Google OAuth on both
-`/sign-in` and `/sign-up`. First-time OAuth users are provisioned automatically;
-existing email/password sign-in is unchanged.
 
 ## Notes
 
 <!-- Additional notes or comments -->
-- Session UX (follow-up on `feature/auth-signup-oauth`): added `signOutAction`
-  and a sidebar sign-out control, because the app previously had no way to end a
-  session from the UI. `/sign-in` and `/sign-up` now call `requireGuest()` so a
-  signed-in browser is redirected to `/dashboard` instead of seeing an unusable
-  form. Verified: signed-out `/dashboard` → 307 `/sign-in`; signed-in
-  `/sign-in` and `/sign-up` → 307 `/dashboard`; sign-out clears the Better Auth
-  cookies and `/dashboard` redirects again.
-- Production origin: `https://devgnosis.vercel.app`.
-- Planned branch: `feature/auth-signup-oauth`.
-- Requires a Better Auth route handler at `src/app/api/auth/[...all]/route.ts`;
-  OAuth callbacks cannot work without it.
-- No database migration: the existing `account` table is sufficient.
-- GitHub needs separate OAuth apps for localhost and production; Google can use
-  one client with multiple redirect URIs.
-- Vercel env vars: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`,
-  `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, plus `BETTER_AUTH_URL`.
-- Security: keep Better Auth's default `requireLocalEmailVerified: true`; do not
-  weaken account linking.
-- Email verification, password reset, sign-out, and preview-deployment OAuth
-  remain out of scope.
 
 ## History
 
@@ -89,4 +65,6 @@ The pinned cards rendered snippet/command content as plain monospace text; no hi
 
 **Sign-up & OAuth Providers — Email, GitHub & Google**
 Completed on branch `feature/auth-signup-oauth`, per `@context/features/oauth-providers-spec.md`: added a dedicated `/sign-up` route with email/password registration and shared GitHub/Google buttons on both auth pages. Added paired optional OAuth env validation (`src/lib/env.ts`; a half-configured pair fails startup, blank values count as absent), conditional `socialProviders` plus `account.encryptOAuthTokens` in `src/lib/auth.ts`, the Better Auth route handler at `src/app/api/auth/[...all]/route.ts`, `signInWithProviderAction`/`signUpAction` with Zod schemas in `src/features/auth/schemas.ts`, pure provider resolution in `src/features/auth/oauth-providers.ts`, inline brand SVGs, the sign-up form, and the `/sign-in` ↔ `/sign-up` links. Both pages stay Server Components and pass only `OAuthProvider[]`; no OAuth UI renders when credentials are absent, and `?error=oauth` messages are shown even when Better Auth appends its own `error` code. Added `export const instant = false` to both auth pages because they read `searchParams` and cannot produce a static shell. Vitest: 79 tests passing (provider resolution, env pair validation, form/OAuth schemas, action error mapping). Lint, typegen + type-check, production build, and runtime smoke tests with and without OAuth credentials pass. Status: Completed.
+
+**Follow-up on the same branch — session UX and environments:** added `signOutAction` plus a sidebar sign-out control, because the app previously had no way to end a session from the UI. `/sign-in` and `/sign-up` now call `requireGuest()` so a signed-in browser is redirected to `/dashboard` instead of seeing an unusable form. Verified: signed-out `/dashboard` → 307 `/sign-in`; signed-in `/sign-in` and `/sign-up` → 307 `/dashboard`; sign-out clears the Better Auth cookies and `/dashboard` redirects again. Deployment: each environment now has its own Neon branch (`development`, `preview`, `production`) and its own Vercel scope; see `@context/project-overview.md` → Architecture → Environments. Still open before public sign-ups: the Google OAuth app is in Testing mode, so only added test users can sign in until it is published.
 
