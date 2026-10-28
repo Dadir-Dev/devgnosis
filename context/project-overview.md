@@ -124,10 +124,6 @@ Use a stable `slug` for navigable collection URLs. Never derive permissions from
 
 ## Design references
 
-These approved UI mockups guide implementation of the dashboard shell, responsive behavior, collection/item hierarchy, and detail-drawer patterns. They are design references, not exact pixel-for-pixel requirements.
-
-## Design references
-
 The following desktop mockups are the visual baseline for the DevGnosis dashboard. They guide layout, hierarchy, dark-mode treatment, type-color accents, and the item detail experience; implementation should remain responsive and accessible rather than pixel-copying fixed dimensions.
 
 ### Dashboard — default state
