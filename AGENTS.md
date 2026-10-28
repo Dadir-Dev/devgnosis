@@ -45,5 +45,4 @@ Full upgrade notes: `node_modules/next/dist/docs/01-app/02-guides/upgrading/vers
 ## Layout & styling
 
 - App Router lives in `src/app`; `@/*` maps to `./src/*`.
-- Tailwind CSS v4 is enabled via a Turbopack loader rule in `next.config.ts` (`*.css` -> `@tailwindcss/turbopack`), **not** PostCSS — there is no `postcss.config.mjs`. Put Tailwind's `@import "tailwindcss";` in `src/app/globals.css` when styling.
-- `src/app/globals.css` is currently **empty**, so no Tailwind utilities render until that import is added back.
+- Tailwind CSS v4 is enabled via a Turbopack loader rule in `next.config.ts` (`*.css` -> `@tailwindcss/turbopack`), **not** PostCSS — there is no `postcss.config.mjs`. Tailwind's `@import "tailwindcss";` lives at the top of `src/app/globals.css`.
