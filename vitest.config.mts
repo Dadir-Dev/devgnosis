@@ -19,7 +19,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.{ts,tsx}"],
     // `src/lib/env.ts` validates these at import time. Tests never connect.
     env: {
       DATABASE_URL: "postgresql://user:password@localhost:5432/devgnosis",
