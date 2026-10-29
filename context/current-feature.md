@@ -7,7 +7,7 @@
 ## Status
 
 <!-- Not Started | In Progress | Completed -->
-Not Started
+In Progress
 
 ## Goals
 
@@ -22,6 +22,8 @@ Draft goals — confirm before starting.
 ## Notes
 
 <!-- Additional notes or comments -->
+
+Branch: `feature/auth-rate-limiter-h1`
 
 Source: inline request resolved from `SCAN-FINDINGS.md` → High → **H1 — The only auth path bypasses the only rate limiter in the stack** (`SCAN-FINDINGS.md:50-66`). No spec file exists for this feature yet.
 

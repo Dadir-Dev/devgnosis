@@ -31,12 +31,18 @@ vi.mock("next/headers", () => ({ headers: mocks.headers }));
 vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 
 import {
+  signInAction,
   signInWithProviderAction,
   signUpAction,
   type OAuthActionState,
+  type SignInState,
   type SignUpState,
 } from "./auth";
 import { OAUTH_FAILURE_MESSAGE } from "@/features/auth/oauth-providers";
+import {
+  AUTH_RATE_LIMIT_MAX_ATTEMPTS,
+  resetAuthAttempts,
+} from "@/lib/rate-limit";
 
 class RedirectSignal extends Error {
   readonly url: string;
@@ -48,7 +54,10 @@ class RedirectSignal extends Error {
 }
 
 const OAUTH_INITIAL: OAuthActionState = { error: null };
+const SIGN_IN_INITIAL: SignInState = { error: null };
 const SIGN_UP_INITIAL: SignUpState = { error: null };
+const TOO_MANY_ATTEMPTS_MESSAGE =
+  "Too many attempts. Wait a few minutes and try again.";
 
 function toFormData(values: Record<string, string>): FormData {
   const data = new FormData();
@@ -69,7 +78,10 @@ const VALID_SIGN_UP = {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.headers.mockResolvedValue(new Headers());
+  resetAuthAttempts();
+  mocks.headers.mockResolvedValue(
+    new Headers({ "x-forwarded-for": "203.0.113.7" }),
+  );
   mocks.redirect.mockImplementation((url: string) => {
     throw new RedirectSignal(url);
   });
@@ -149,6 +161,85 @@ describe("signInWithProviderAction", () => {
   });
 });
 
+describe("signInAction", () => {
+  it("signs in and redirects while under the rate limit", async () => {
+    mocks.signInEmail.mockResolvedValue({ token: "session-token" });
+
+    await expect(
+      signInAction(
+        SIGN_IN_INITIAL,
+        toFormData({ email: "ada@example.com", password: "correct-horse" }),
+      ),
+    ).rejects.toMatchObject({ url: "/dashboard" });
+
+    expect(mocks.signInEmail).toHaveBeenCalledTimes(1);
+  });
+
+  it("blocks further attempts once the limit is reached", async () => {
+    mocks.signInEmail.mockRejectedValue(new Error("Invalid credentials"));
+
+    const formData = toFormData({
+      email: "ada@example.com",
+      password: "wrong-password",
+    });
+
+    for (
+      let attempt = 1;
+      attempt <= AUTH_RATE_LIMIT_MAX_ATTEMPTS;
+      attempt += 1
+    ) {
+      const state = await signInAction(SIGN_IN_INITIAL, formData);
+
+      expect(state.error).toBe("Invalid email or password.");
+    }
+
+    const blocked = await signInAction(SIGN_IN_INITIAL, formData);
+
+    expect(blocked.error).toBe(TOO_MANY_ATTEMPTS_MESSAGE);
+    expect(mocks.signInEmail).toHaveBeenCalledTimes(
+      AUTH_RATE_LIMIT_MAX_ATTEMPTS,
+    );
+  });
+
+  it("resets the budget after a successful sign-in", async () => {
+    const failedForm = toFormData({
+      email: "ada@example.com",
+      password: "wrong-password",
+    });
+
+    mocks.signInEmail.mockRejectedValue(new Error("Invalid credentials"));
+
+    for (
+      let attempt = 1;
+      attempt < AUTH_RATE_LIMIT_MAX_ATTEMPTS;
+      attempt += 1
+    ) {
+      await signInAction(SIGN_IN_INITIAL, failedForm);
+    }
+
+    mocks.signInEmail.mockResolvedValue({ token: "session-token" });
+
+    await expect(
+      signInAction(
+        SIGN_IN_INITIAL,
+        toFormData({ email: "ada@example.com", password: "correct-horse" }),
+      ),
+    ).rejects.toMatchObject({ url: "/dashboard" });
+
+    mocks.signInEmail.mockRejectedValue(new Error("Invalid credentials"));
+
+    for (
+      let attempt = 1;
+      attempt <= AUTH_RATE_LIMIT_MAX_ATTEMPTS;
+      attempt += 1
+    ) {
+      const state = await signInAction(SIGN_IN_INITIAL, failedForm);
+
+      expect(state.error).toBe("Invalid email or password.");
+    }
+  });
+});
+
 describe("signUpAction", () => {
   it("creates an account and redirects to the dashboard", async () => {
     mocks.signUpEmail.mockResolvedValue({ token: "session-token" });
@@ -208,5 +299,63 @@ describe("signUpAction", () => {
     );
 
     expect(state.error).toBe("Could not create your account. Try again.");
+  });
+
+  it("blocks further attempts once the limit is reached", async () => {
+    mocks.signUpEmail.mockRejectedValue(new Error("database unavailable"));
+
+    const formData = toFormData({
+      ...VALID_SIGN_UP,
+      email: "rate-limit@example.com",
+    });
+
+    for (
+      let attempt = 1;
+      attempt <= AUTH_RATE_LIMIT_MAX_ATTEMPTS;
+      attempt += 1
+    ) {
+      const state = await signUpAction(SIGN_UP_INITIAL, formData);
+
+      expect(state.error).toBe("Could not create your account. Try again.");
+    }
+
+    const blocked = await signUpAction(SIGN_UP_INITIAL, formData);
+
+    expect(blocked.error).toBe(TOO_MANY_ATTEMPTS_MESSAGE);
+    expect(mocks.signUpEmail).toHaveBeenCalledTimes(
+      AUTH_RATE_LIMIT_MAX_ATTEMPTS,
+    );
+  });
+
+  it("resets the budget after a successful sign-up", async () => {
+    const formData = toFormData(VALID_SIGN_UP);
+
+    mocks.signUpEmail.mockRejectedValue(new Error("database unavailable"));
+
+    for (
+      let attempt = 1;
+      attempt < AUTH_RATE_LIMIT_MAX_ATTEMPTS;
+      attempt += 1
+    ) {
+      await signUpAction(SIGN_UP_INITIAL, formData);
+    }
+
+    mocks.signUpEmail.mockResolvedValue({ token: "session-token" });
+
+    await expect(
+      signUpAction(SIGN_UP_INITIAL, formData),
+    ).rejects.toMatchObject({ url: "/dashboard" });
+
+    mocks.signUpEmail.mockRejectedValue(new Error("database unavailable"));
+
+    for (
+      let attempt = 1;
+      attempt <= AUTH_RATE_LIMIT_MAX_ATTEMPTS;
+      attempt += 1
+    ) {
+      const state = await signUpAction(SIGN_UP_INITIAL, formData);
+
+      expect(state.error).toBe("Could not create your account. Try again.");
+    }
   });
 });

@@ -17,6 +17,12 @@ import {
 } from "@/features/auth/schemas";
 import { auth } from "@/lib/auth";
 import { env } from "@/lib/env";
+import {
+  buildAuthAttemptKey,
+  clearAuthAttempt,
+  consumeAuthAttempt,
+  getClientIp,
+} from "@/lib/rate-limit";
 
 /** Result shape consumed by `useActionState` in the sign-in form. */
 export type SignInState = {
@@ -44,6 +50,8 @@ const SIGN_UP_INVALID_MESSAGE =
 const SIGN_UP_DUPLICATE_MESSAGE =
   "An account with this email already exists. Sign in instead.";
 const SIGN_UP_FAILURE_MESSAGE = "Could not create your account. Try again.";
+const TOO_MANY_ATTEMPTS_MESSAGE =
+  "Too many attempts. Wait a few minutes and try again.";
 
 const DUPLICATE_ACCOUNT_CODES = new Set([
   "USER_ALREADY_EXISTS",
@@ -77,14 +85,26 @@ export async function signInAction(
     return { error: "Enter a valid email address and password." };
   }
 
+  const requestHeaders = await headers();
+  const attemptKey = buildAuthAttemptKey(
+    getClientIp(requestHeaders),
+    parsed.data.email,
+  );
+
+  if (!consumeAuthAttempt(attemptKey)) {
+    return { error: TOO_MANY_ATTEMPTS_MESSAGE };
+  }
+
   try {
     await auth.api.signInEmail({
       body: parsed.data,
-      headers: await headers(),
+      headers: requestHeaders,
     });
   } catch {
     return { error: "Invalid email or password." };
   }
+
+  clearAuthAttempt(attemptKey);
 
   // `redirect` throws, so it stays outside the try/catch.
   redirect("/dashboard");
@@ -169,6 +189,16 @@ export async function signUpAction(
     return { error: SIGN_UP_INVALID_MESSAGE, fieldErrors };
   }
 
+  const requestHeaders = await headers();
+  const attemptKey = buildAuthAttemptKey(
+    getClientIp(requestHeaders),
+    parsed.data.email,
+  );
+
+  if (!consumeAuthAttempt(attemptKey)) {
+    return { error: TOO_MANY_ATTEMPTS_MESSAGE };
+  }
+
   try {
     await auth.api.signUpEmail({
       body: {
@@ -176,7 +206,7 @@ export async function signUpAction(
         email: parsed.data.email,
         password: parsed.data.password,
       },
-      headers: await headers(),
+      headers: requestHeaders,
     });
   } catch (error) {
     if (isDuplicateAccountError(error)) {
@@ -185,6 +215,8 @@ export async function signUpAction(
 
     return { error: SIGN_UP_FAILURE_MESSAGE };
   }
+
+  clearAuthAttempt(attemptKey);
 
   // `redirect` throws, so it stays outside the try/catch.
   redirect("/dashboard");
