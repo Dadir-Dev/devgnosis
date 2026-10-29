@@ -2,7 +2,7 @@
 
 <!-- Feature name and short description -->
 
-**No active feature**
+**Auth Rate Limiter (H1)** — Throttle the in-process Better Auth sign-in and sign-up Server Actions, which bypass the HTTP-router rate limiter entirely.
 
 ## Status
 
@@ -13,9 +13,22 @@ Not Started
 
 <!-- Goals and requirements -->
 
+Draft goals — confirm before starting.
+
+- Add `src/lib/rate-limit.ts` exposing `consumeAuthAttempt(key)`, keyed by IP + email.
+- Call it before delegating to Better Auth in both `signInAction` and `signUpAction`, and return a neutral "too many attempts" state.
+- When a shared store exists, set `rateLimit.storage` in `src/lib/auth.ts` so the HTTP route is effective across instances too.
+
 ## Notes
 
 <!-- Additional notes or comments -->
+
+Source: inline request resolved from `SCAN-FINDINGS.md` → High → **H1 — The only auth path bypasses the only rate limiter in the stack** (`SCAN-FINDINGS.md:50-66`). No spec file exists for this feature yet.
+
+Open decisions from the finding:
+- Better Auth's default in-memory limiter storage is per-instance on serverless, so the limiter is weak on either route; choosing/adding a shared store is undecided.
+- `consumeAuthAttempt` must be keyed by IP + email — the key derivation (how the client IP is obtained behind the host) is not settled.
+- This finding also states the project rule it violates: `context/project-overview.md:205` requires auth endpoints to be rate-limited.
 
 ## History
 
