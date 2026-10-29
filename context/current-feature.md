@@ -2,35 +2,20 @@
 
 <!-- Feature name and short description -->
 
-**Auth Rate Limiter (H1)** — Throttle the in-process Better Auth sign-in and sign-up Server Actions, which bypass the HTTP-router rate limiter entirely.
+**No active feature**
 
 ## Status
 
 <!-- Not Started | In Progress | Completed -->
-In Progress
+Not Started
 
 ## Goals
 
 <!-- Goals and requirements -->
 
-Draft goals — confirm before starting.
-
-- Add `src/lib/rate-limit.ts` exposing `consumeAuthAttempt(key)`, keyed by IP + email.
-- Call it before delegating to Better Auth in both `signInAction` and `signUpAction`, and return a neutral "too many attempts" state.
-- When a shared store exists, set `rateLimit.storage` in `src/lib/auth.ts` so the HTTP route is effective across instances too.
-
 ## Notes
 
 <!-- Additional notes or comments -->
-
-Branch: `feature/auth-rate-limiter-h1`
-
-Source: inline request resolved from `SCAN-FINDINGS.md` → High → **H1 — The only auth path bypasses the only rate limiter in the stack** (`SCAN-FINDINGS.md:50-66`). No spec file exists for this feature yet.
-
-Open decisions from the finding:
-- Better Auth's default in-memory limiter storage is per-instance on serverless, so the limiter is weak on either route; choosing/adding a shared store is undecided.
-- `consumeAuthAttempt` must be keyed by IP + email — the key derivation (how the client IP is obtained behind the host) is not settled.
-- This finding also states the project rule it violates: `context/project-overview.md:205` requires auth endpoints to be rate-limited.
 
 ## History
 
@@ -82,4 +67,7 @@ The pinned cards rendered snippet/command content as plain monospace text; no hi
 Completed on branch `feature/auth-signup-oauth`, per `@context/features/oauth-providers-spec.md`: added a dedicated `/sign-up` route with email/password registration and shared GitHub/Google buttons on both auth pages. Added paired optional OAuth env validation (`src/lib/env.ts`; a half-configured pair fails startup, blank values count as absent), conditional `socialProviders` plus `account.encryptOAuthTokens` in `src/lib/auth.ts`, the Better Auth route handler at `src/app/api/auth/[...all]/route.ts`, `signInWithProviderAction`/`signUpAction` with Zod schemas in `src/features/auth/schemas.ts`, pure provider resolution in `src/features/auth/oauth-providers.ts`, inline brand SVGs, the sign-up form, and the `/sign-in` ↔ `/sign-up` links. Both pages stay Server Components and pass only `OAuthProvider[]`; no OAuth UI renders when credentials are absent, and `?error=oauth` messages are shown even when Better Auth appends its own `error` code. Added `export const instant = false` to both auth pages because they read `searchParams` and cannot produce a static shell. Vitest: 79 tests passing (provider resolution, env pair validation, form/OAuth schemas, action error mapping). Lint, typegen + type-check, production build, and runtime smoke tests with and without OAuth credentials pass. Status: Completed.
 
 **Follow-up on the same branch — session UX and environments:** added `signOutAction` plus a sidebar sign-out control, because the app previously had no way to end a session from the UI. `/sign-in` and `/sign-up` now call `requireGuest()` so a signed-in browser is redirected to `/dashboard` instead of seeing an unusable form. Verified: signed-out `/dashboard` → 307 `/sign-in`; signed-in `/sign-in` and `/sign-up` → 307 `/dashboard`; sign-out clears the Better Auth cookies and `/dashboard` redirects again. Deployment: each environment now has its own Neon branch (`development`, `preview`, `production`) and its own Vercel scope; see `@context/project-overview.md` → Architecture → Environments. Still open before public sign-ups: the Google OAuth app is in Testing mode, so only added test users can sign in until it is published.
+
+**Auth Rate Limiter (H1)** (commit `77997b7`)
+Completed on branch `feature/auth-rate-limiter-h1` (merged to `main`): closed SCAN-FINDINGS H1 by adding `src/lib/rate-limit.ts`, a per-instance fixed-window limiter keyed by client IP + email (10 attempts / 15 minutes, last `x-forwarded-for` hop, key cleared on success). `signInAction` and `signUpAction` now consume an attempt before delegating to Better Auth and return a neutral "too many attempts" state, so `auth.api.*` no longer allows unlimited password guessing or account creation. Cross-instance throttling (goal 3, `rateLimit.storage` in `src/lib/auth.ts`) was deliberately deferred because no shared store exists. Vitest: 93/93 passing (limiter unit tests plus per-action block and reset tests). Lint, typegen + type-check, and production build pass. Status: Completed.
 
