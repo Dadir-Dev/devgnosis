@@ -2,33 +2,20 @@
 
 <!-- Feature name and short description -->
 
-**Dashboard Read Path** — Close SCAN-FINDINGS M4, M5, M6 and M7 on the authenticated `/dashboard` request: one session read, two filtered count aggregates, a bounded sidebar collection read, and a narrow column set for recent items.
+**No active feature**
 
 ## Status
 
 <!-- Not Started | In Progress | Completed -->
-In Progress
+Not Started
 
 ## Goals
 
 <!-- Goals and requirements -->
 
-- **M4 — resolve the session once per request.** Memoize `getSession()` (`src/lib/auth-session.ts:16`) for a single request/render pass so `dashboard/layout.tsx:22` and `dashboard/page.tsx:18` share one session+user DB read. `getCurrentUser`, `requireUser`, and `requireGuest` inherit the dedupe with unchanged signatures and behaviour; `requireUser` still redirects to `/sign-in`.
-- **M5 — two filtered aggregates instead of five counts.** `getDashboardCounts` (`src/db/queries/collections.ts:203-229`) produces all five values from one aggregate over `items` and one over `collections` (`count(*) filter (where …)`), keeps `addedThisWeek` on the rolling seven-day window, stays owner-scoped, and does not read the favorite-item count twice between the sidebar and the page.
-- **M6 — bound the sidebar collection read.** `sidebarCollectionsQuery` (`collections.ts:109-125`) reads only all favorites plus the four most recent non-favorites instead of every owner collection, keeps the dominant-type color working for both sections, runs the type breakdown once per request (shared with `getRecentCollections`), and keeps `updatedAt DESC` / `name ASC` / `id ASC` ordering.
-- **M7 — stop shipping the `content` column to the recent-items list.** `recentItemsQuery` (`items.ts:63-71`) drops `content`, `url`, `fileName`, and `language`; pinned items keep the full column set; the narrow row type cannot be assigned to the pinned row type.
-- **Verification gate.** No schema change or new dependency; owner scoping unchanged on every query; `bun run lint`, `bunx next typegen && bunx tsc --noEmit`, `bun run test`, and `bun run build` pass, with query tests updated for the new shapes.
-
 ## Notes
 
 <!-- Additional notes or comments -->
-
-- Branch: `feature/dashboard-read-path`
-- Spec: `@context/features/dashboard-read-path-spec.md` (filename uses `dashboard-read-path`, not `session-cache`, because the scope grew from M4 to M4–M7).
-- Baseline and target: a `/dashboard` load issues 17 statements for ~9 distinct reads; target is ~11. Re-measure after M7 and record it in the spec's Follow-up.
-- **Open decision:** whether the dashboard should read counts once in the layout and pass them to the page. App Router layouts cannot pass props to pages, so this needs a shared request-scoped accessor — deferred, not part of this feature.
-- **Out of scope:** H1 cross-instance rate limiting (needs a Redis/Upstash shared store and `rateLimit.storage` in `src/lib/auth.ts`), M8 (pinned cards render the full body), L2 (`'use cache'` for `getSidebarItemTypes` / `getUserPlan`), and L8 (fixture-backed query tests).
-- Land as four separate commits in order M4 → M5 → M6 → M7 so each is independently revertable.
 
 ## History
 
@@ -83,4 +70,7 @@ Completed on branch `feature/auth-signup-oauth`, per `@context/features/oauth-pr
 
 **Auth Rate Limiter (H1)** (commit `77997b7`)
 Completed on branch `feature/auth-rate-limiter-h1` (merged to `main`): closed SCAN-FINDINGS H1 by adding `src/lib/rate-limit.ts`, a per-instance fixed-window limiter keyed by client IP + email (10 attempts / 15 minutes, last `x-forwarded-for` hop, key cleared on success). `signInAction` and `signUpAction` now consume an attempt before delegating to Better Auth and return a neutral "too many attempts" state, so `auth.api.*` no longer allows unlimited password guessing or account creation. Cross-instance throttling (goal 3, `rateLimit.storage` in `src/lib/auth.ts`) was deliberately deferred because no shared store exists. Vitest: 93/93 passing (limiter unit tests plus per-action block and reset tests). Lint, typegen + type-check, and production build pass. Status: Completed.
+
+**Dashboard Read Path** (commit `ef23708`)
+Completed on branch `feature/dashboard-read-path` (merged to `main`): closed SCAN-FINDINGS M4–M7 on the authenticated `/dashboard` request. `getSession` is now memoized with React `cache()` (`src/lib/auth-session.ts`), the five stat-card counts became one filtered aggregate per table with a request-cached `getDashboardCounts`, the sidebar reads only favorites plus the four most recent non-favorites through a shared `getDashboardCollections` breakdown (`src/db/queries/collections.ts`), and `recentItemsQuery` selects a narrow column set while pinned cards keep the full one (`src/db/queries/items.ts`, `src/features/items/dashboard-items.ts`). No schema change or new dependency; owner scoping unchanged. Vitest: 96/96 passing. Lint, typegen + type-check, and production build pass. Status: Completed.
 
