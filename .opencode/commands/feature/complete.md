@@ -34,14 +34,14 @@ Only after `git branch --merged` lists it. Never with `-D`.
 
 **6. Reset `context/current-feature.md`**
 
-Append to the **end** of `## History`, matching the existing entry style:
+Append to the **end** of `context/feature-history.md`, matching the existing entry style:
 
 ```md
 **<Feature name>** (commit `<short sha>`)
 Completed on branch `<branch>` (merged to `main`): <2–4 sentences — what shipped, the key files, and the verification result: lint, typegen + type-check, tests n/n, production build>.
 ```
 
-Then reset the live sections: feature line back to `**No active feature**`, Status `Not Started`, clear Goals and Notes while keeping their HTML comments. Do not touch earlier History entries.
+Then reset the live sections of `context/current-feature.md`: feature line back to `**No active feature**`, Status `Not Started`, clear Goals and Notes while keeping their HTML comments. Never edit `context/feature-history.md` except to append.
 
 **7. Commit, then push**
 

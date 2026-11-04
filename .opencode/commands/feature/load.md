@@ -20,14 +20,14 @@ description: Load a feature or fix spec into context/current-feature.md
 
 **2. Guard the current feature**
 
-Read `context/current-feature.md`. If `## Status` is `In Progress`, stop and ask before replacing it. `## History` is an append-only log and must never be lost.
+Read `context/current-feature.md`. If `## Status` is `In Progress`, stop and ask before replacing it. `context/feature-history.md` is an append-only log and must never be lost.
 
 **3. Update `context/current-feature.md`**
 
 Edit only the feature line, `## Status`, `## Goals`, and `## Notes`. Do not create or modify any other file.
 
 - Keep the `# Current Feature` H1 and all HTML comment placeholders.
-- Leave `## History` byte-for-byte unchanged.
+- Leave `context/feature-history.md` byte-for-byte unchanged.
 - Feature line: `**<Feature name>** — <one-line description>`, replacing `**No active feature**`.
 - Status: `Not Started`.
 - Goals: bullets taken from the spec's own requirements, not invented. For an inline description, prefix the section with `Draft goals — confirm before starting.`
