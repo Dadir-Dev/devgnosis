@@ -33,7 +33,9 @@ We will create a new branch for every feature/fix. Name branch **feature/[featur
 
 - Ask before committing (don't auto-commit)
 - Use conventional commit messages (feat:, fix:, chore:, etc.)
-- Keep commits focused (one feature/fix per commit)
+- Keep commits focused: one concern per commit. Split a diff that mixes unrelated concerns (tooling, workflow docs, a data move) into separate commits on the same branch.
+- Size each commit to be reviewable: roughly 2–7 files. Never land a feature as one large commit, and never split into commits too small to explain on their own (a lone import, formatting, or a one-line rename).
+- A commit must leave the tree consistent — no commit may depend on a later one to compile, lint, or run.
 - Never put "Generated With Claude" in the commit messages
 
 ## When Stuck

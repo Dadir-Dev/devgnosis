@@ -18,9 +18,9 @@ This command ends up committing, merging, and pushing. Do each step only after t
 
 Any failure stops the flow: do not commit. Point at `/feature/test` and stop. Quote only the failing gate's preview.
 
-**3. Propose the commit**
+**3. Propose the commits**
 
-Draft a conventional message (`feat:` / `fix:` / `chore:`) describing the user-visible change. No attribution trailers, no "Generated with". Show the message with `git diff --stat` and **ask for approval**. Commit only after a yes.
+Group the diff into reviewable slices per `context/ai-interaction.md` → Commits: one concern per commit, roughly 2–7 files, no single mega-commit. Draft a conventional message (`feat:` / `fix:` / `chore:`) for each slice, in order. No attribution trailers, no "Generated with". Show the messages with `git diff --stat` and **ask for approval**. Commit only after a yes, one slice at a time.
 
 **4. Merge**
 
