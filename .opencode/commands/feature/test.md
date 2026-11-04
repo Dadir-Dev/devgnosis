@@ -22,18 +22,17 @@ Write the tests the feature is missing, then prove the tree is green.
 
 **3. Run the gates, in order**
 
-1. `bun run lint`
-2. `bunx next typegen && bunx tsc --noEmit`
-3. `bun run test`
-4. `bun run build`
+`bun run gate` — lint → typegen + type-check → tests → build. It prints one line per gate and keeps full logs in `.gate/`.
 
-Stop at the first failure and fix it. If the same failure survives 2–3 attempts, stop and explain it instead of trying variations.
+Stop at the first failure and fix it. Quote only the failing gate's preview; never paste a whole log. If the same failure survives 2–3 attempts, stop and explain it instead of trying variations.
+
+When all four pass, `.gate/last.json` is stamped for reuse by `/feature/complete`. Do not run the gates again after that.
 
 Never make a gate pass by weakening it: no `any`, no `@ts-expect-error`, no skipped tests, no deleted assertions, no loosened Zod schema. A test that found a real bug means fixing the source.
 
 **4. Report**
 
-- One line per gate: pass, or the failing test and error.
+- One line per gate: pass, or the failing test and error. Full logs live in `.gate/<gate>.log`; do not paste them.
 - Tests added: file, subject, cases.
 - Deliberately untested: what, and why.
 - No coverage percentage — no provider is configured, and inventing a number is worse than omitting it. Report which behaviours are covered.

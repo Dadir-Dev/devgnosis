@@ -14,9 +14,9 @@ This command ends up committing, merging, and pushing. Do each step only after t
 
 **2. Run the gates, in order**
 
-`bun run lint` → `bunx next typegen && bunx tsc --noEmit` → `bun run test` → `bun run build`.
+`bun run gate -- --reuse`. With `--reuse` it reuses `.gate/last.json` when the tree hash still matches a full pass from `/feature/test`; otherwise it runs lint → typegen + type-check → tests → build.
 
-Any failure stops the flow: do not commit. Point at `/feature/test` and stop.
+Any failure stops the flow: do not commit. Point at `/feature/test` and stop. Quote only the failing gate's preview.
 
 **3. Propose the commit**
 

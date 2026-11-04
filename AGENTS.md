@@ -29,6 +29,9 @@ Next.js 16 App Router starter. Package manager is **bun** (`bun.lock`, `packageM
 - `bun run build` — production build (Turbopack; does not lint)
 - `bun run start` — serve the production build
 - `bun run lint` — ESLint only. `next lint` was removed in Next 16, so there is no `next lint`.
+- `bun run gate` — all four gates in order (lint, typegen + type-check, tests, build). Prints one line per gate; full logs in `.gate/`.
+- `bun run gate:fast` — the first three gates, no production build.
+- `bun run gate -- --reuse` — reuse `.gate/last.json` when the tree hash matches a previous full pass.
 - Type-check: `bunx next typegen && bunx tsc --noEmit` (no `typecheck` script exists)
 
 `next typegen` is required before type-checking because route type helpers (`LayoutProps`, `PageProps`, `RouteContext`) are generated globally during `dev`/`build`/`typegen` — `src/app/layout.tsx` already relies on `LayoutProps<"/">`.

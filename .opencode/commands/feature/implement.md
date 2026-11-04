@@ -14,7 +14,7 @@ Implement the feature in `context/current-feature.md`, one goal at a time. Do no
 
 **2. Confirm the baseline is green**
 
-`bun run lint`, `bunx next typegen && bunx tsc --noEmit`, `bun run test`.
+`bun run gate:fast` — lint, typegen + type-check, tests. It prints one line per gate and keeps full logs in `.gate/`.
 
 A pre-existing failure is not yours to fix silently. Report it and stop, so a failure later is attributable to this feature.
 
@@ -22,7 +22,7 @@ A pre-existing failure is not yours to fix silently. Report it and stop, so a fa
 
 Order the work by dependency: `src/db/schema` → `src/db/queries` → `src/features` → `src/actions` → `src/components` → `src/app`.
 
-After each slice, re-run lint, typecheck, and the tests touching that slice. Leave the production build for the end.
+After each slice, run `bunx next typegen && bunx tsc --noEmit --pretty false` and the tests that touch that slice (`bunx vitest run <paths>`). Skip lint per slice. Do not run the production build.
 
 **4. Rules for every change**
 
@@ -42,4 +42,4 @@ After each slice, re-run lint, typecheck, and the tests touching that slice. Lea
 
 **6. Report**
 
-Per goal: done, or blocked and why. Then the files touched and the full gate result (`bun run lint`, typegen + type-check, `bun run test`, `bun run build`). End with `/feature/review`.
+Per goal: done, or blocked and why. Then the files touched and the fast-gate result (`bun run gate:fast`). Do not run the production build here; `/feature/test` owns it. End with `/feature/review`.
