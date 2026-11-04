@@ -2,7 +2,7 @@ import { Sidebar } from "@/components/dashboard/sidebar";
 import { SidebarProvider } from "@/components/dashboard/sidebar-context";
 import { TopBar } from "@/components/dashboard/top-bar";
 import {
-  getFavoriteItemCount,
+  getDashboardCounts,
   getSidebarCollections,
 } from "@/db/queries/collections";
 import { getSidebarItemTypes } from "@/db/queries/items";
@@ -22,10 +22,10 @@ export default async function DashboardLayout({
   const user = await requireUser();
   const plan = await getUserPlan(user.id);
 
-  const [itemTypes, sidebarCollections, favoriteItemCount] = await Promise.all([
+  const [itemTypes, sidebarCollections, counts] = await Promise.all([
     getSidebarItemTypes(user.id, plan),
     getSidebarCollections(user.id),
-    getFavoriteItemCount(user.id),
+    getDashboardCounts(user.id),
   ]);
 
   return (
@@ -36,7 +36,7 @@ export default async function DashboardLayout({
           itemTypes={itemTypes}
           favoriteCollections={sidebarCollections.favorites}
           recentCollections={sidebarCollections.recents}
-          favoriteItemCount={favoriteItemCount}
+          favoriteItemCount={counts.favoriteItems}
         />
 
         <div className="flex min-w-0 flex-1 flex-col">
