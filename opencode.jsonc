@@ -1,0 +1,45 @@
+{
+  // Project-local MCP configuration. See https://opencode.ai/v2/docs/mcp-servers
+  //
+  // Neon MCP scoping is project-wide, never branch-wide: there is no branch
+  // permission in the Neon MCP server. This project keeps `development`,
+  // `preview`, and `production` as branches of ONE Neon project, so "read-only
+  // on production" can only be expressed as "read-only on the whole project".
+  //
+  // Therefore exactly one of these two servers should be enabled at a time.
+  // `neon` is the safe default. `neon-unrestricted` is opt-in for deliberate
+  // development-branch work, because while it is enabled the agent can also
+  // reach the production branch.
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "servers": {
+      "neon": {
+        "type": "remote",
+        "url": "https://mcp.neon.tech/mcp?readonly=true&category=schema&category=querying&category=docs",
+        // Neon's token endpoint rejects the redirect URI OpenCode sends during
+        // the OAuth code exchange ("Invalid redirect URI"), so this server
+        // authenticates with a Neon API key instead. Use a project-scoped key:
+        // an org-wide or personal key reaches every project in the account,
+        // while this key cannot leave the project the agent is meant to use.
+        // The key is read from a file outside the repo so it never ends up in
+        // `.env`, where the Next.js dev server would also pick it up.
+        "oauth": false,
+        "headers": {
+          "Authorization": "Bearer {file:~/.secrets/neon-api-key.txt}"
+        }
+      },
+      "neon-unrestricted": {
+        "type": "remote",
+        "url": "https://mcp.neon.tech/mcp",
+        // Same key, same file, deliberately: this server is already the
+        // "agent may write" switch, and it stays disabled unless a task
+        // genuinely needs writes on the development branch.
+        "oauth": false,
+        "headers": {
+          "Authorization": "Bearer {file:~/.secrets/neon-api-key.txt}"
+        },
+        "disabled": true
+      }
+    }
+  }
+}

@@ -46,3 +46,17 @@ Full upgrade notes: `node_modules/next/dist/docs/01-app/02-guides/upgrading/vers
 
 - App Router lives in `src/app`; `@/*` maps to `./src/*`.
 - Tailwind CSS v4 is enabled via a Turbopack loader rule in `next.config.ts` (`*.css` -> `@tailwindcss/turbopack`), **not** PostCSS — there is no `postcss.config.mjs`. Tailwind's `@import "tailwindcss";` lives at the top of `src/app/globals.css`.
+
+## Neon MCP (database access for agents)
+
+`opencode.jsonc` configures two Neon MCP servers against the single Neon project that owns the `development`, `preview`, and `production` branches:
+
+- `neon` — the default. `?readonly=true&category=schema&category=querying&category=docs`. No writes, no branch create/reset/delete, no migrations.
+- `neon-unrestricted` — `disabled: true`. Full access, for deliberate development-branch work only.
+
+Rules:
+
+- Never enable `neon-unrestricted` while pointed at, or asked about, production. Neon MCP scoping is project-wide, so an enabled unrestricted server can reset or delete the `production` branch.
+- Disable `neon-unrestricted` again as soon as the development-branch task is done.
+- `readonly=true` blocks writes but does **not** block reads: the agent can still `SELECT` production rows (user emails, password hashes, OAuth identities). Do not use MCP to browse production user data.
+- Schema changes still go through reviewed Drizzle migrations (`bun run db:generate` / `db:migrate`), never through MCP SQL.

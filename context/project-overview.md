@@ -195,6 +195,14 @@ One Neon branch per environment, mapped to the matching Vercel environment scope
 - Apply the reviewed migration artifact to each branch. A branch missing the latest migration is a bug, not a shortcut.
 - Production is the default Neon branch, so stray branch creation and restores default to the safer parent.
 
+### Agent database access (Neon MCP)
+
+OpenCode connects to the Neon MCP server from `opencode.jsonc`. Neon scopes that server per **project**, not per branch, and all three environments share one project, so a single MCP agent cannot be "full access on `development`/`preview` and read-only on `production`".
+
+Current posture: one read-only, category-narrowed connection (`schema`, `querying`, `docs`), plus a disabled unrestricted connection for deliberate development-branch work. This prevents accidental writes. It does not prevent accidental reads of production rows, since read-only mode still permits `SELECT`.
+
+**Pre-launch prerequisite (same trigger as enabling public sign-ups):** move `production` into its own Neon project, then pin two simultaneous connections — `projectId=<prod>&readonly=true&category=schema&category=querying` and `projectId=<dev>`. Only then is production a real boundary rather than an advisory rule. Tracked in `@context/project-overview.md` → Delivery roadmap → Phase 2.
+
 ### Boundary and security rules
 
 - Derive the authenticated user on the server for every protected request; never accept `userId` from the client.
@@ -325,6 +333,7 @@ The current planned model is `deepseek-flash` (confirm the deployed provider/mod
 - File/image upload flow, signed R2 URLs, content validation, and safe download/delete behavior.
 - Stripe checkout/customer portal/webhooks and production plan enforcement.
 - JSON export and account-data deletion/export paths.
+- Split `production` into its own Neon project and pin both MCP connections to a project (see Architecture → Environments → Agent database access).
 
 ### Phase 3 — intelligence and growth
 
