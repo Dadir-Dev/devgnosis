@@ -43,3 +43,6 @@ next-env.d.ts
 
 # local working notes — intentionally untracked
 SCAN-FINDINGS.md
+
+# gate logs and the reusable gate stamp
+/.gate/

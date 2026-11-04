@@ -8,7 +8,7 @@ Mode is `$ARGUMENTS`. Empty or `check`: report only, change nothing. `run` or `f
 
 **1. Feature history**
 
-`context/current-feature.md` → `## History` reads oldest to newest and each entry is internally consistent (branch name, commit sha, verification claim). Report entries that are out of order, malformed, or contradict a later one.
+`context/feature-history.md` reads oldest to newest and each entry is internally consistent (branch name, commit sha, verification claim). Report entries that are out of order, malformed, or contradict a later one.
 
 **2. Debug leftovers**
 

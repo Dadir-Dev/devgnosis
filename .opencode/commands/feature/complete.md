@@ -14,13 +14,13 @@ This command ends up committing, merging, and pushing. Do each step only after t
 
 **2. Run the gates, in order**
 
-`bun run lint` → `bunx next typegen && bunx tsc --noEmit` → `bun run test` → `bun run build`.
+`bun run gate -- --reuse`. With `--reuse` it reuses `.gate/last.json` when the tree hash still matches a full pass from `/feature/test`; otherwise it runs lint → typegen + type-check → tests → build.
 
-Any failure stops the flow: do not commit. Point at `/feature/test` and stop.
+Any failure stops the flow: do not commit. Point at `/feature/test` and stop. Quote only the failing gate's preview.
 
-**3. Propose the commit**
+**3. Propose the commits**
 
-Draft a conventional message (`feat:` / `fix:` / `chore:`) describing the user-visible change. No attribution trailers, no "Generated with". Show the message with `git diff --stat` and **ask for approval**. Commit only after a yes.
+Group the diff into reviewable slices per `context/ai-interaction.md` → Commits: one concern per commit, roughly 2–7 files, no single mega-commit. Draft a conventional message (`feat:` / `fix:` / `chore:`) for each slice, in order. No attribution trailers, no "Generated with". Show the messages with `git diff --stat` and **ask for approval**. Commit only after a yes, one slice at a time.
 
 **4. Merge**
 
@@ -34,14 +34,14 @@ Only after `git branch --merged` lists it. Never with `-D`.
 
 **6. Reset `context/current-feature.md`**
 
-Append to the **end** of `## History`, matching the existing entry style:
+Append to the **end** of `context/feature-history.md`, matching the existing entry style:
 
 ```md
 **<Feature name>** (commit `<short sha>`)
 Completed on branch `<branch>` (merged to `main`): <2–4 sentences — what shipped, the key files, and the verification result: lint, typegen + type-check, tests n/n, production build>.
 ```
 
-Then reset the live sections: feature line back to `**No active feature**`, Status `Not Started`, clear Goals and Notes while keeping their HTML comments. Do not touch earlier History entries.
+Then reset the live sections of `context/current-feature.md`: feature line back to `**No active feature**`, Status `Not Started`, clear Goals and Notes while keeping their HTML comments. Never edit `context/feature-history.md` except to append.
 
 **7. Commit, then push**
 

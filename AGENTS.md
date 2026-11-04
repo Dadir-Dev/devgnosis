@@ -16,12 +16,16 @@ Next.js 16 App Router starter. Package manager is **bun** (`bun.lock`, `packageM
 
 ## Context Files
 
-  Read the following files to get the full context of this project:
-  
-  - @context/project-overview.md
-  - @context/coding-standards.md
-  - @context/ai-interaction.md
-  - @context/current-feature.md
+Load these on demand, not up front. The repo is the source of truth; do not re-read an unchanged file in a later phase.
+
+- `context/ai-interaction.md` — read first, always. Workflow, branching, commit, and review rules.
+- `context/coding-standards.md` — grep the relevant section (for example `## Testing and quality gates`) instead of reading all ~16 KB.
+- `context/project-overview.md` — read only when the task touches architecture, data model, environments, or pricing.
+- `context/current-feature.md` — the live feature only; it is deliberately short.
+- `context/feature-history.md` — do not read unless a task asks about past features. Append-only; never rewrite it.
+- `context/features/*-spec.md` — only the one spec the active feature names.
+
+Never read `context/screenshots/` as text.
 
 ## Commands
 
@@ -29,6 +33,9 @@ Next.js 16 App Router starter. Package manager is **bun** (`bun.lock`, `packageM
 - `bun run build` — production build (Turbopack; does not lint)
 - `bun run start` — serve the production build
 - `bun run lint` — ESLint only. `next lint` was removed in Next 16, so there is no `next lint`.
+- `bun run gate` — all four gates in order (lint, typegen + type-check, tests, build). Prints one line per gate; full logs in `.gate/`.
+- `bun run gate:fast` — the first three gates, no production build.
+- `bun run gate -- --reuse` — reuse `.gate/last.json` when the tree hash matches a previous full pass.
 - Type-check: `bunx next typegen && bunx tsc --noEmit` (no `typecheck` script exists)
 
 `next typegen` is required before type-checking because route type helpers (`LayoutProps`, `PageProps`, `RouteContext`) are generated globally during `dev`/`build`/`typegen` — `src/app/layout.tsx` already relies on `LayoutProps<"/">`.

@@ -29,7 +29,7 @@ Run `git status --porcelain`. If it is not empty, stop and list the files. Do no
 
 - Set `## Status` to `In Progress`.
 - Record `Branch: \`<branch>\`` under `## Notes`, replacing any earlier `Branch:` line.
-- Leave `## History` unchanged.
+- Never touch `context/feature-history.md`.
 
 **6. Stop**
 

@@ -63,7 +63,7 @@ Read first, in this order:
 - `AGENTS.md`
 - `context/project-overview.md`
 - `context/coding-standards.md`
-- `context/current-feature.md` — `## History` is the ledger of what is actually implemented
+- `context/current-feature.md` for the live feature, and `context/feature-history.md` — the ledger of what is actually implemented
 - `package.json`, `next.config.ts`, `drizzle.config.ts`, `tsconfig.json`, `.gitignore`
 
 Then scan `src/` and the root config. Treat these as generated or dev-only; do not recommend splitting or "cleaning up" them:
@@ -76,7 +76,7 @@ Then scan `src/` and the root config. Treat these as generated or dev-only; do n
 
 ## Only report real, reachable issues
 
-A finding must point at code that exists and runs. Before writing one, confirm the feature is implemented by checking `context/current-feature.md` → History and the actual route or file.
+A finding must point at code that exists and runs. Before writing one, confirm the feature is implemented by checking `context/feature-history.md` and the actual route or file.
 
 Do **not** report as missing or broken:
 
