@@ -3,10 +3,10 @@ import { Clock } from "lucide-react";
 import { ItemTypeIcon } from "@/components/dashboard/item-type-icon";
 import { RelativeTime } from "@/components/dashboard/relative-time";
 import { SectionHeading } from "@/components/dashboard/section-heading";
-import type { DashboardItem } from "@/features/items/dashboard-items";
+import type { RecentItem } from "@/features/items/dashboard-items";
 
 type RecentItemsProps = {
-  items: DashboardItem[];
+  items: RecentItem[];
 };
 
 /** The ten most recently edited items as a compact list. */

@@ -10,8 +10,10 @@ import {
 } from "@/features/dashboard/sidebar";
 import {
   buildDashboardItems,
+  buildRecentItems,
   type DashboardItem,
-  type DashboardItemRow,
+  type ItemTagRow,
+  type RecentItem,
 } from "@/features/items/dashboard-items";
 import type { UserPlan } from "@/lib/plans";
 
@@ -24,14 +26,14 @@ import type { UserPlan } from "@/lib/plans";
  * `item_types`) plus one batched tag query, or one grouped type-count join.
  */
 
-const ITEM_COLUMNS = {
+/**
+ * Columns shared by both dashboard item lists. `id`/`updatedAt` keep the
+ * deterministic ordering; the joined type is rendered by both surfaces.
+ */
+const ITEM_BASE_COLUMNS = {
   id: items.id,
   title: items.title,
   description: items.description,
-  content: items.content,
-  url: items.url,
-  fileName: items.fileName,
-  language: items.language,
   isFavorite: items.isFavorite,
   isPinned: items.isPinned,
   updatedAt: items.updatedAt,
@@ -45,13 +47,25 @@ const ITEM_COLUMNS = {
   },
 } as const;
 
+/** The recent list renders no body, so it selects only the base columns. */
+const ITEM_LIST_COLUMNS = ITEM_BASE_COLUMNS;
+
+/** Pinned cards render the body, so they add the payload columns. */
+const ITEM_PINNED_COLUMNS = {
+  ...ITEM_BASE_COLUMNS,
+  content: items.content,
+  url: items.url,
+  fileName: items.fileName,
+  language: items.language,
+} as const;
+
 /**
  * Pinned items, newest first. `id` breaks ties deterministically: the seed
  * writes every item in one transaction, so `updated_at` values can tie.
  */
 export function pinnedItemsQuery(userId: string, limit: number) {
   return db
-    .select(ITEM_COLUMNS)
+    .select(ITEM_PINNED_COLUMNS)
     .from(items)
     .innerJoin(itemTypes, eq(itemTypes.id, items.itemTypeId))
     .where(and(eq(items.ownerId, userId), eq(items.isPinned, true)))
@@ -59,10 +73,14 @@ export function pinnedItemsQuery(userId: string, limit: number) {
     .limit(limit);
 }
 
-/** Most recently updated items, newest first, with the same `id` tie-break. */
+/**
+ * Most recently updated items, newest first, with the same `id` tie-break.
+ * Selects the narrow list columns so item bodies never leave the database for
+ * a list that does not render them.
+ */
 export function recentItemsQuery(userId: string, limit: number) {
   return db
-    .select(ITEM_COLUMNS)
+    .select(ITEM_LIST_COLUMNS)
     .from(items)
     .innerJoin(itemTypes, eq(itemTypes.id, items.itemTypeId))
     .where(eq(items.ownerId, userId))
@@ -87,19 +105,14 @@ export function itemTagsQuery(userId: string, itemIds: string[]) {
     .orderBy(asc(tags.normalizedName));
 }
 
-/** Loads the batched tags for a non-empty item result and builds the view models. */
-async function attachTags(
+/** Loads the batched tags for a non-empty item result, skipping the query otherwise. */
+async function loadTagRows(
   userId: string,
-  rows: DashboardItemRow[],
-): Promise<DashboardItem[]> {
-  if (rows.length === 0) return [];
+  itemIds: string[],
+): Promise<ItemTagRow[]> {
+  if (itemIds.length === 0) return [];
 
-  const tagRows = await itemTagsQuery(
-    userId,
-    rows.map((row) => row.id),
-  );
-
-  return buildDashboardItems(rows, tagRows);
+  return itemTagsQuery(userId, itemIds);
 }
 
 /** The owner's pinned items, at most `limit` (default 2), newest first. */
@@ -108,16 +121,26 @@ export async function getPinnedItems(
   limit = 2,
 ): Promise<DashboardItem[]> {
   const rows = await pinnedItemsQuery(userId, limit);
-  return attachTags(userId, rows);
+  const tagRows = await loadTagRows(
+    userId,
+    rows.map((row) => row.id),
+  );
+
+  return buildDashboardItems(rows, tagRows);
 }
 
 /** The owner's most recently updated items (default 10), newest first. */
 export async function getRecentItems(
   userId: string,
   limit = 10,
-): Promise<DashboardItem[]> {
+): Promise<RecentItem[]> {
   const rows = await recentItemsQuery(userId, limit);
-  return attachTags(userId, rows);
+  const tagRows = await loadTagRows(
+    userId,
+    rows.map((row) => row.id),
+  );
+
+  return buildRecentItems(rows, tagRows);
 }
 
 /**

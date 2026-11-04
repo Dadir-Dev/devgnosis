@@ -7,7 +7,7 @@
 ## Status
 
 <!-- Not Started | In Progress | Completed -->
-Not Started
+In Progress
 
 ## Goals
 
@@ -23,6 +23,7 @@ Not Started
 
 <!-- Additional notes or comments -->
 
+- Branch: `feature/dashboard-read-path`
 - Spec: `@context/features/dashboard-read-path-spec.md` (filename uses `dashboard-read-path`, not `session-cache`, because the scope grew from M4 to M4–M7).
 - Baseline and target: a `/dashboard` load issues 17 statements for ~9 distinct reads; target is ~11. Re-measure after M7 and record it in the spec's Follow-up.
 - **Open decision:** whether the dashboard should read counts once in the layout and pass them to the page. App Router layouts cannot pass props to pages, so this needs a shared request-scoped accessor — deferred, not part of this feature.

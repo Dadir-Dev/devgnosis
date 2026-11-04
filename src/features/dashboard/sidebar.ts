@@ -100,13 +100,13 @@ export function buildSidebarItemTypes(
 }
 
 /**
- * Splits the owner's collections into sidebar favorites and the four most
- * recent non-favorites. `summaries` must already be ordered newest first.
+ * Splits the owner's collections into sidebar favorites and the non-favorites.
+ * `summaries` must already be ordered newest first, and the query already
+ * bounds the non-favorites to the sidebar's recent limit.
  */
 export function buildSidebarCollections(
   rows: SidebarCollectionRow[],
   summaries: CollectionSummary[],
-  recentLimit = 4,
 ): SidebarCollections {
   const favoriteById = new Map(
     rows.map((row) => [row.id, row.isFavorite]),
@@ -124,8 +124,6 @@ export function buildSidebarCollections(
 
   return {
     favorites: collections.filter((collection) => collection.isFavorite),
-    recents: collections
-      .filter((collection) => !collection.isFavorite)
-      .slice(0, recentLimit),
+    recents: collections.filter((collection) => !collection.isFavorite),
   };
 }

@@ -116,14 +116,13 @@ describe("buildSidebarItemTypes", () => {
 });
 
 describe("buildSidebarCollections", () => {
-  it("splits favorites from recents and caps recents at four", () => {
+  it("splits favorites from the bounded recents, preserving order", () => {
     const rows: SidebarCollectionRow[] = [
       collectionRow({ id: "favorite", isFavorite: true }),
       collectionRow({ id: "recent-1" }),
       collectionRow({ id: "recent-2" }),
       collectionRow({ id: "recent-3" }),
       collectionRow({ id: "recent-4" }),
-      collectionRow({ id: "recent-5" }),
     ];
     const summaries = rows.map((row) =>
       collectionSummary({ id: row.id, slug: row.id, name: row.id }),

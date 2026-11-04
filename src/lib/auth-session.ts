@@ -2,6 +2,7 @@ import "server-only";
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 import { auth } from "@/lib/auth";
 
@@ -12,10 +13,16 @@ export type AuthSession = NonNullable<
 
 export type AuthUser = AuthSession["user"];
 
-/** Resolve the current session on the server; null when signed out. */
-export async function getSession(): Promise<AuthSession | null> {
+/**
+ * Resolve the current session on the server; null when signed out.
+ *
+ * Memoized with React `cache()` so the dashboard layout and page share one
+ * session+user read per request. `cache()` is request-scoped — never a
+ * module-level store — so one user's session can never reach another request.
+ */
+export const getSession = cache(async (): Promise<AuthSession | null> => {
   return auth.api.getSession({ headers: await headers() });
-}
+});
 
 /** Resolve the signed-in user on the server; null when signed out. */
 export async function getCurrentUser(): Promise<AuthUser | null> {

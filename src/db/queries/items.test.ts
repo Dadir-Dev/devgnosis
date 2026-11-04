@@ -29,6 +29,15 @@ describe("pinnedItemsQuery", () => {
     expect(sql).toContain('"item_types"."content_kind"');
   });
 
+  it("keeps the payload columns the cards render", () => {
+    const { sql } = pinnedItemsQuery(OWNER_ID, 2).toSQL();
+
+    expect(sql).toContain('"items"."content"');
+    expect(sql).toContain('"items"."url"');
+    expect(sql).toContain('"items"."file_name"');
+    expect(sql).toContain('"items"."language"');
+  });
+
   it("orders by updatedAt descending with an id tie-break and applies the limit", () => {
     const { sql, params } = pinnedItemsQuery(OWNER_ID, 2).toSQL();
 
@@ -46,6 +55,17 @@ describe("recentItemsQuery", () => {
     expect(params).toContain(OWNER_ID);
     expect(params).not.toContain(OTHER_USER_ID);
     expect(sql).toContain('where "items"."owner_id" = $1 order by');
+  });
+
+  it("selects only the columns the list renders", () => {
+    const { sql } = recentItemsQuery(OWNER_ID, 10).toSQL();
+
+    expect(sql).toContain('"items"."title"');
+    expect(sql).toContain('"items"."description"');
+    expect(sql).not.toContain('"items"."content"');
+    expect(sql).not.toContain('"items"."url"');
+    expect(sql).not.toContain('"items"."file_name"');
+    expect(sql).not.toContain('"items"."language"');
   });
 
   it("orders by updatedAt descending with an id tie-break and applies the limit", () => {
