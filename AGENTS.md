@@ -23,6 +23,7 @@ Load these on demand, not up front. The repo is the source of truth; do not re-r
 - `context/project-overview.md` — read only when the task touches architecture, data model, environments, or pricing.
 - `context/current-feature.md` — the live feature only; it is deliberately short.
 - `context/feature-history.md` — do not read unless a task asks about past features. Append-only; never rewrite it.
+- `context/workflow-reference.md` — read only when changing gates, workflow commands, or context-loading rules.
 - `context/features/*-spec.md` — only the one spec the active feature names.
 
 Never read `context/screenshots/` as text.
