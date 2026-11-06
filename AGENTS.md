@@ -68,3 +68,11 @@ Rules:
 - Disable `neon-unrestricted` again as soon as the development-branch task is done.
 - `readonly=true` blocks writes but does **not** block reads: the agent can still `SELECT` production rows (user emails, password hashes, OAuth identities). Do not use MCP to browse production user data.
 - Schema changes still go through reviewed Drizzle migrations (`bun run db:generate` / `db:migrate`), never through MCP SQL.
+
+<!-- context7 -->
+## Context7 docs
+
+For library, framework, or SDK API questions — Drizzle, Better Auth, Tailwind v4, Neon, Bun, React — fetch current docs with the `find-docs` skill (`ctx7 library`, then `ctx7 docs`) instead of relying on training data. Prefer this over web search. Never put secrets in a query.
+
+**Next.js 16 is the exception:** `node_modules/next/dist/docs/` is this repo's source of truth and outranks Context7, because this version has breaking changes public docs may not reflect.
+<!-- context7 -->
