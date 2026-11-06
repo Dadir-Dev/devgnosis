@@ -115,6 +115,7 @@ Do not assume these exist:
 - `coding-standards.md` and `project-overview.md` are not split into topic files.
 - No requirements digest; `/feature/implement` still re-reads the full spec.
 - The token reduction is an **estimate (about 50–70%), not a measured result**.
+- Playwright deferred until the page set stabilizes. Resume with committed Playwright Test specs first; add the MCP only if exploratory verification is still needed. Do not add E2E to `gate`.
 
 ## 7. Open nits
 
