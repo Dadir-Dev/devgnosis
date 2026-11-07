@@ -68,6 +68,7 @@ A passing run writes `.gate/last.json`:
 | Phase | Runs | Deliberately does not run |
 | --- | --- | --- |
 | `/feature/implement` | `gate:fast` baseline and final report; typegen + `tsc` and targeted `vitest` per slice | No lint per slice, no build |
+| `/feature/review` | Delegates inspection to the `feature-reviewer` subagent, then triages its findings in the main agent | No gates, no whole-repo scan, no edits |
 | `/feature/test` | One `bun run gate`, then writes the full stamp | Does not run gates again after the pass |
 | `/feature/complete` | `bun run gate -- --reuse`; slices and commits; appends history | Does not rebuild a tree stamped by `/feature/test` |
 
@@ -79,14 +80,14 @@ A passing run writes `.gate/last.json`:
 
 ### Manual habit (not automated)
 
-Start a fresh session per phase (`start`, `implement`, `test`, `complete`). All state is in files, so a new session loses nothing and stops the whole transcript from being re-sent each turn.
+Start a fresh session per phase (`start`, `implement`, `review`, `test`, `complete`). All state is in files, so a new session loses nothing and stops the whole transcript from being re-sent each turn.
 
 ## 4. Context loading
 
 `AGENTS.md` defines on-demand reads instead of loading everything up front:
 
 - `context/ai-interaction.md` — always.
-- `context/coding-standards.md` — grep the relevant section.
+- `context/coding-standards.md` — grep the relevant section. **Exception:** the `feature-reviewer` subagent loads it in full (about 4.1k tokens). A diff review must not guess which sections apply.
 - `context/project-overview.md` — only for architecture, data model, environments, or pricing.
 - `context/current-feature.md` — the live feature.
 - `context/feature-history.md` — only when a task asks about past features.
@@ -109,7 +110,7 @@ From `context/ai-interaction.md` → Commits:
 
 Do not assume these exist:
 
-- `review.md` still reads whole changed files; scope it to diff hunks and skip generated files.
+- `review.md` reads whole changed files on purpose: hunks alone hide the surrounding ownership filters and boundary placement. The reviewer excludes generated files from its findings instead.
 - `explain.md` is still a full step; make it on-demand.
 - `scanner.md` still runs lint, typegen, `tsc`, and tests as separate commands; switch it to `gate:fast`.
 - `coding-standards.md` and `project-overview.md` are not split into topic files.

@@ -13,25 +13,26 @@ Report only. Do not edit files, run formatters, or commit.
 - Add uncommitted work: `git diff`, `git diff --cached`, and `git status --short` for untracked files.
 - Empty diff: say so and stop.
 
-Read the changed files, not just the stat output.
+Do not read the changed files here; the reviewer does that. Read a file only to settle a finding you doubt during triage.
 
-**2. Check the goals**
+**2. Delegate the inspection**
 
-- ✅ **Met** — the goal, and the file or behaviour that satisfies it.
-- ❌ **Missing or partial** — the goal, and what is absent.
-- 🚫 **Scope creep** — work in the diff that no goal covers.
+Spawn the `feature-reviewer` subagent. Pass it, verbatim:
 
-**3. Check this project's invariants**
+- the goals and spec path from `context/current-feature.md`;
+- the full diff;
+- the changed-file list, including untracked files.
 
-- **Ownership**: every read and mutation is scoped by the server-derived user; no `userId` from the client; item/tag/collection joins verify same-owner.
-- **Validation**: Zod at each boundary; actions return a typed `{ ok, data } | { ok, error }` result.
-- **Boundaries**: no server-only module imported into a client component; `'use client'` only where interaction requires it.
-- **Next 16**: `await params` / `searchParams` / `cookies()` / `headers()`; no synchronous request APIs.
-- **Data**: schema changes ship with a generated migration; never `db push`.
-- **Tests**: new logic has Vitest coverage; no `any`, no dead or commented-out code, no unused imports.
+Do not summarise the implementation, explain your design choices, or hint at what to find. It must judge from the code alone. It reads `context/coding-standards.md` itself.
+
+**3. Triage**
+
+Drop findings that are wrong or out of scope: pre-existing code the diff does not touch, generated files, deferred features, and style ESLint does not flag. Keep every finding you cannot disprove by reading the code.
 
 **4. Report**
 
 Group findings as ❌ **Blocker**, ⚠️ **Should fix**, or 💡 **Nit**. Each finding is one line: `path:line` — what is wrong, why it matters, and which standard it violates. No praise, and do not narrate what the code does.
+
+Then a **Dismissed** list: one line per rejected reviewer finding, `path:line — why it does not apply`.
 
 End with exactly one verdict — `Ready to complete` or `Needs changes` — plus the number of files reviewed.
