@@ -59,3 +59,5 @@ Review AI-generated code periodically, especially for:
 - Performance (unnecessary re-renders, N+1 queries)
 - Logic errors (edge cases)
 - Patterns (matches existing codebase?)
+
+`/feature/review` delegates the inspection to the read-only `feature-reviewer` subagent and triages its findings in the main agent, so the authoring session does not grade its own work.
