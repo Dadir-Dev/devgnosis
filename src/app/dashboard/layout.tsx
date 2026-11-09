@@ -32,7 +32,7 @@ export default async function DashboardLayout({
     <SidebarProvider>
       <div className="flex h-dvh w-full overflow-hidden">
         <Sidebar
-          user={{ name: user.name, email: user.email }}
+          user={{ name: user.name, email: user.email, image: user.image ?? null }}
           itemTypes={itemTypes}
           favoriteCollections={sidebarCollections.favorites}
           recentCollections={sidebarCollections.recents}

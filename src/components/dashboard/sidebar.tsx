@@ -21,11 +21,12 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { SignOutButton } from "@/components/auth/sign-out-button";
+import { UserMenu } from "@/components/auth/user-menu";
 import { Button } from "@/components/ui/button";
 import type {
   SidebarCollection,
   SidebarItemType,
+  SidebarUser,
 } from "@/features/dashboard/sidebar";
 import { FALLBACK_TYPE_ICON, TYPE_ICONS } from "@/lib/item-types";
 import { cn } from "@/lib/utils";
@@ -179,7 +180,7 @@ function SidebarHeader({ collapsed, mobile, onClose }: SidebarHeaderProps) {
 }
 
 type SidebarDataProps = {
-  user: { name: string; email: string };
+  user: SidebarUser;
   itemTypes: SidebarItemType[];
   favoriteCollections: SidebarCollection[];
   recentCollections: SidebarCollection[];
@@ -203,7 +204,6 @@ function SidebarPanel({
   favoriteItemCount,
 }: SidebarPanelProps) {
   const pathname = usePathname();
-  const initials = user.name.slice(0, 1).toUpperCase();
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -348,30 +348,7 @@ function SidebarPanel({
           {collapsed && <span className="sr-only">Theme: Dark</span>}
         </div>
 
-        <div
-          className={cn(
-            "mt-1 flex items-center gap-2 rounded-lg p-2",
-            collapsed && "flex-col justify-center gap-1 p-1",
-          )}
-        >
-          <span
-            aria-hidden="true"
-            className="grid size-8 shrink-0 place-items-center rounded-full bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground"
-          >
-            {initials}
-          </span>
-          {collapsed ? (
-            <span className="sr-only">{`${user.name} — ${user.email}`}</span>
-          ) : (
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-medium">{user.name}</span>
-              <span className="block truncate text-xs text-muted-foreground">
-                {user.email}
-              </span>
-            </span>
-          )}
-          <SignOutButton />
-        </div>
+        <UserMenu user={user} collapsed={collapsed} onNavigate={onNavigate} />
       </div>
     </div>
   );

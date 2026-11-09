@@ -12,6 +12,13 @@ import { SYSTEM_TYPE_KEYS } from "@/lib/system-item-types";
  * client-side sidebar never imports Drizzle, auth, or mock data.
  */
 
+/** The identity fields the sidebar account block renders. */
+export type SidebarUser = {
+  name: string;
+  email: string;
+  image: string | null;
+};
+
 /** One system item type joined to the resolved owner's item count. */
 export type SidebarItemTypeRow = Pick<
   typeof itemTypes.$inferSelect,
