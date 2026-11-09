@@ -25,8 +25,8 @@ Not Started.
 - Avatar shows `user.image` when present; otherwise it shows generated initials.
 - Initials match the brief's example: `"Brad Traversy"` → `"BT"`.
 - The bottom-of-sidebar identity block shows the avatar, name, and email.
-- Clicking the avatar area navigates to `/profile`.
-- A separate account-menu trigger opens a dropdown with **Profile** and **Sign out**.
+- Clicking the avatar area opens the account menu.
+- The account menu contains **Profile** (navigates to `/profile`) and **Sign out**.
 - `/profile` is a real authenticated route with read-only account details.
 - Existing sign-in, sign-up, OAuth, rate limiting, and sign-out behaviour is unchanged.
 
@@ -60,7 +60,7 @@ Not Started.
 | Avatar: image or initials | **This feature** |
 | Sidebar name + email | Already implemented; keep |
 | Dropdown with "Sign out" | **This feature** |
-| Avatar click → `/profile` | **This feature** |
+| Avatar click → account menu → `/profile` | **This feature** |
 | Reusable avatar component | **This feature** |
 
 ## Requirements
@@ -160,9 +160,8 @@ span plus `SignOutButton` in `src/components/dashboard/sidebar.tsx`.
 
 **Expanded sidebar and mobile drawer:**
 
-- Avatar + name + email form a `next/link` to `/profile`.
-- A trailing chevron button is the Radix `DropdownMenu.Trigger`, with
-  `aria-label="Open account menu"`.
+- Avatar + name + email form the Radix `DropdownMenu.Trigger`, rendered as a button
+  with the sidebar's account-block styling.
 - The menu opens to the end/bottom and contains:
   - a non-interactive label with the user's name and email;
   - **Profile** → `/profile`;
@@ -172,8 +171,8 @@ span plus `SignOutButton` in `src/components/dashboard/sidebar.tsx`.
 
 **Collapsed sidebar:**
 
-- The avatar is a link to `/profile` with a `title` and `aria-label`.
-- The chevron trigger sits below the avatar.
+- The avatar is the `DropdownMenu.Trigger` with a `title` and
+  `aria-label="Open account menu"`.
 - The name and email remain available to screen readers through `sr-only` text.
 
 **Sign out:**
@@ -232,10 +231,10 @@ pass that:
   `nextCookies()` persists it; the action redirects to `/dashboard`. This intentionally
   differs from the brief's "redirect to sign-in".
 - **Real `/profile` route.** A top-level page, guarded by `requireUser()`.
-- **Avatar click vs. dropdown.** The brief says both "dropdown on avatar click" and
-  "clicking the icon should go to /profile". These conflict. This spec resolves them
-  with a split control: the avatar/name area is a link to `/profile`; the chevron
-  opens the account menu. The menu also includes **Profile** for discoverability.
+- **Avatar opens the account menu.** The brief says both "dropdown on avatar click"
+  and "clicking the icon should go to /profile"; these conflict. The chosen behaviour
+  is the dropdown: clicking the avatar/name block opens the account menu, and
+  **Profile** inside it navigates to `/profile`. There is no separate chevron trigger.
 - **Radix `DropdownMenu`.** `radix-ui` is already installed and used by the sidebar
   dialog.
 - **Plain `<img>` for provider avatars.** It avoids coupling the build to specific
@@ -285,15 +284,15 @@ No component test harness exists yet; avatar and menu behaviour is verified manu
 - [ ] Sign in with GitHub and verify the GitHub avatar appears.
 - [ ] Break the image URL temporarily and verify the initials fallback appears without
       an error page.
-- [ ] Click the avatar/name area and land on `/profile`.
+- [ ] Click the avatar/name area to open the account menu, then use **Profile** to
+      reach `/profile`.
 - [ ] `/profile` shows the large avatar, name, email, plan badge, and join date.
-- [ ] Open the chevron menu and confirm **Profile** and **Sign out**.
+- [ ] Open the account menu and confirm **Profile** and **Sign out**.
 - [ ] Activate **Sign out** and confirm the session clears and `/sign-in` renders.
-- [ ] Collapse the sidebar and confirm the avatar links to `/profile` and the chevron
-      still opens the menu.
+- [ ] Collapse the sidebar and confirm the avatar still opens the menu.
 - [ ] Open the mobile drawer and repeat the avatar/menu checks.
-- [ ] Keyboard: Tab to the avatar link and chevron, open the menu with Enter/Space,
-      arrow between items, and activate Sign out.
+- [ ] Keyboard: Tab to the avatar trigger, open the menu with Enter/Space, arrow
+      between items, and activate Sign out.
 - [ ] Signed-out `/profile` redirects to `/sign-in`.
 - [ ] `/sign-in` and `/sign-up` still render and link to each other.
 - [ ] Register a new account and confirm it lands on `/dashboard` (auto-login).
@@ -304,7 +303,8 @@ No component test harness exists yet; avatar and menu behaviour is verified manu
 - `getInitials("Brad Traversy") === "BT"`.
 - The sidebar uses `user.image` when present and initials otherwise.
 - The sidebar still displays name and email in the expanded state.
-- The avatar/name area navigates to `/profile`; the chevron opens the account menu.
+- Clicking the avatar/name area opens the account menu; **Profile** navigates to
+  `/profile`.
 - The account menu contains **Profile** and **Sign out**.
 - Sign out uses the existing Server Action and redirects to `/sign-in`.
 - `/profile` is reachable only with a session and renders read-only account details.
@@ -317,8 +317,9 @@ No component test harness exists yet; avatar and menu behaviour is verified manu
 - **Profile page is outside the dashboard shell.** Navigating from the sidebar to
   `/profile` replaces the shell with a standalone page. Moving both routes into a
   shared authenticated route group is a follow-up.
-- **The avatar menu and the "go to profile" instruction conflict in the brief.** This
-  spec uses a link plus a chevron trigger, as described in Decisions.
+- **The avatar menu and the "go to profile" instruction conflict in the brief.** The
+  avatar opens the account menu, with **Profile** inside it, as described in
+  Decisions.
 - **No profile editing.** The page is read-only.
 - **Provider avatar hosts are not allowlisted for `next/image`.** Plain `<img>` is used
   deliberately.
