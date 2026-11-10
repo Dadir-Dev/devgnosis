@@ -187,9 +187,9 @@ One Neon branch per environment, mapped to the matching Vercel environment scope
 
 | Environment | Neon branch | Where the URL lives | Notes |
 | --- | --- | --- | --- |
-| Local development | `development` | `.env` on the developer machine | Seeded with the demo user |
-| Vercel Preview | `preview` | Vercel → Preview scope | Email/password only; OAuth callbacks are not registered for preview URLs |
-| Vercel Production | `production` | Vercel → Production scope | Never seeded with demo data |
+| Local development | `development` | `.env` on the developer machine | Full demo seed: demo account, collections, and items |
+| Vercel Preview | `preview` | Vercel → Preview scope | Full demo seed (demo account, collections, items); email/password sign-up off; OAuth callbacks are not registered for preview URLs |
+| Vercel Production | `production` | Vercel → Production scope | System types + demo account only; never demo collections or items |
 
 - Branch a new environment from `production`, not `development`, so previews start from the schema production actually runs.
 - Apply the reviewed migration artifact to each branch. A branch missing the latest migration is a bug, not a shortcut.
@@ -211,6 +211,8 @@ Current posture: one read-only, category-narrowed connection (`schema`, `queryin
 - Store raw file object keys, not permanent public links. Delete associated objects as part of a controlled item-deletion workflow.
 - Verify Stripe webhook signatures and treat Stripe as the billing-event source; update entitlements idempotently.
 - Rate-limit authentication, upload, search, export, and AI endpoints. Log AI usage without persisting secrets from prompts unnecessarily.
+- Keep email/password sign-up disabled by default until email verification ships; OAuth identities must be provider-verified.
+- Exclude the shared demo account from billing, AI, and uploads.
 
 ## Data model
 
@@ -331,6 +333,7 @@ The current planned model is `deepseek-flash` (confirm the deployed provider/mod
 ### Phase 2 — product readiness
 
 - File/image upload flow, signed R2 URLs, content validation, and safe download/delete behavior.
+- Ship email verification and re-enable email/password sign-up once a sending domain exists (see `@context/features/email-verification-spec.md`).
 - Stripe checkout/customer portal/webhooks and production plan enforcement.
 - JSON export and account-data deletion/export paths.
 - Split `production` into its own Neon project and pin both MCP connections to a project (see Architecture → Environments → Agent database access).

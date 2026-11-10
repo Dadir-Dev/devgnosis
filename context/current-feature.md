@@ -12,7 +12,7 @@ Spec: `@context/features/access-gating-demo-spec.md`.
 ## Status
 
 <!-- Not Started | In Progress | Completed -->
-In Progress — spec written; implementation awaiting approval.
+In Progress
 
 ## Goals
 
@@ -31,9 +31,9 @@ In Progress — spec written; implementation awaiting approval.
   `@context/features/email-verification-spec.md`.
 - The demo account is shared and publicly writable. Exclude it from billing,
   AI, and uploads, and add a reset script before the first write feature ships.
-- Preview keeps the same sign-up policy as production; test email/password
-  sign-up locally, where `AUTH_EMAIL_SIGN_UP_ENABLED` defaults to true.
-- Planned branch: `feature/auth-access-gating-demo`.
+- Email/password sign-up is closed by default in every environment; set
+  `AUTH_EMAIL_SIGN_UP_ENABLED="true"` in `.env` to test it locally.
+- Branch: `feature/auth-access-gating-demo`.
 
 ## History
 
