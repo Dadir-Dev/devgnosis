@@ -23,6 +23,12 @@ export const envSchema = z
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
+    /**
+     * Email/password sign-up. Closed everywhere by default until email
+     * verification ships; OAuth sign-up is unaffected. Set to true only to
+     * test email/password sign-up locally.
+     */
+    AUTH_EMAIL_SIGN_UP_ENABLED: z.stringbool().default(false),
     /** Neon branch, direct (non-pooler) endpoint — used by drizzle-kit. */
     DATABASE_URL: postgresUrl,
     /** Neon branch, pooled (PgBouncer) endpoint — used by the app at runtime. */

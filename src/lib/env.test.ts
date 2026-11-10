@@ -59,3 +59,30 @@ describe("envSchema OAuth credentials", () => {
     ).toBe(true);
   });
 });
+
+describe("envSchema AUTH_EMAIL_SIGN_UP_ENABLED", () => {
+  it("accepts explicit true and false strings", () => {
+    expect(
+      envSchema.parse({
+        ...BASE_ENV,
+        AUTH_EMAIL_SIGN_UP_ENABLED: "true",
+      }).AUTH_EMAIL_SIGN_UP_ENABLED,
+    ).toBe(true);
+    expect(
+      envSchema.parse({
+        ...BASE_ENV,
+        AUTH_EMAIL_SIGN_UP_ENABLED: "false",
+      }).AUTH_EMAIL_SIGN_UP_ENABLED,
+    ).toBe(false);
+  });
+
+  it("defaults to false in every environment", () => {
+    expect(envSchema.parse(BASE_ENV).AUTH_EMAIL_SIGN_UP_ENABLED).toBe(false);
+    expect(
+      envSchema.parse({
+        ...BASE_ENV,
+        NODE_ENV: "production",
+      }).AUTH_EMAIL_SIGN_UP_ENABLED,
+    ).toBe(false);
+  });
+});
