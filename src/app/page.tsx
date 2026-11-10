@@ -1,3 +1,10 @@
+import Link from "next/link";
+
 export default function Home() {
-  return <h1>DevGnosis</h1>;
+  return (
+    <main>
+      <h1>DevGnosis</h1>
+      <Link href="/privacy">Privacy policy</Link>
+    </main>
+  );
 }
