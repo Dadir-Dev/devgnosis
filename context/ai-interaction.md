@@ -18,8 +18,8 @@ This is the common workflow that we will use for every single feature/fix:
 4. **Test** - Verify it works in the browser. Run `npm run test` for unit tests and `npm run build` to check for errors
 5. **Iterate** - Iterate and change things if needed
 6. **Commit** - Only after build passes and everything works
-7. **Merge** - Merge to main
-8. **Delete Branch** - Delete branch after merge
+7. **Merge** - Code changes ship through a pull request; docs-only changes may merge locally with `--no-ff`
+8. **Delete Branch** - Delete branch after merge (GitHub deletes PR branches; a docs-only merge deletes locally with `-d`)
 9. **Review** - Review AI-generated code periodically and on demand.
 10. Mark the feature completed in @context/current-feature.md and append the entry to @context/feature-history.md
 

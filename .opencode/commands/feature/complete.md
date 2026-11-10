@@ -22,15 +22,26 @@ Any failure stops the flow: do not commit. Point at `/feature/test` and stop. Qu
 
 Group the diff into reviewable slices per `context/ai-interaction.md` → Commits: one concern per commit, roughly 2–7 files, no single mega-commit. Draft a conventional message (`feat:` / `fix:` / `chore:`) for each slice, in order. No attribution trailers, no "Generated with". Show the messages with `git diff --stat` and **ask for approval**. Commit only after a yes, one slice at a time.
 
-**4. Merge**
+**4. Ship the change**
 
-- `git switch main`, then confirm it matches `origin/main` when a remote exists.
-- `git merge --no-ff <branch>` so the feature boundary stays visible in history.
-- A conflict stops here. Resolve nothing automatically.
+Pick the path from the diff against the branch point (`git diff --name-only <base>...HEAD`):
+
+- **Docs-only** — every changed path ends in `.md`. `git switch main`, confirm it matches `origin/main` when a remote exists, then `git merge --no-ff <branch>` so the feature boundary stays visible in history. A conflict stops here. Resolve nothing automatically. Continue to step 5.
+- **Anything else** — `src/`, `scripts/`, `package.json`, configs, tests, migrations, lockfiles. Push the branch, open a pull request, and **stop**. Do not merge locally, do not delete the branch, and do not reset `current-feature.md`.
+
+```powershell
+git push -u origin <branch>
+# gh installed:
+gh pr create --base main --title "<feature>" --body "<what shipped + verification>"
+# otherwise report the compare URL:
+# https://github.com/<owner>/<repo>/compare/main...<branch>?expand=1
+```
+
+Report the PR URL and stop. After the PR is merged, run `/feature/complete` again: `main` already contains the branch, so skip to step 6 (history + reset).
 
 **5. Delete the local branch**
 
-Only after `git branch --merged` lists it. Never with `-D`.
+Docs-only merges only. Only after `git branch --merged` lists it. Never with `-D`. A pull request deletes its branch on GitHub.
 
 **6. Reset `context/current-feature.md`**
 

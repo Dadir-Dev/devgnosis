@@ -70,7 +70,11 @@ A passing run writes `.gate/last.json`:
 | `/feature/implement` | `gate:fast` baseline and final report; typegen + `tsc` and targeted `vitest` per slice | No lint per slice, no build |
 | `/feature/review` | Delegates inspection to the `feature-reviewer` subagent, then triages its findings in the main agent | No gates, no whole-repo scan, no edits |
 | `/feature/test` | One `bun run gate`, then writes the full stamp | Does not run gates again after the pass |
-| `/feature/complete` | `bun run gate -- --reuse`; slices and commits; appends history | Does not rebuild a tree stamped by `/feature/test` |
+| `/feature/complete` | `bun run gate -- --reuse`; slices and commits; pushes the branch and opens a PR when the diff contains code, merges locally only for docs-only diffs; appends history after merge | Does not rebuild a tree stamped by `/feature/test` |
+
+### Shipping: pull request or local merge
+
+`/feature/complete` inspects the diff before merging. If every changed path ends in `.md`, it merges locally with `--no-ff`. Any code, test, config, or lockfile change is pushed as a branch and handed over as a pull request; the history entry and the `current-feature.md` reset are committed only after that PR merges. `gh` is optional — without it the command reports the GitHub compare URL instead.
 
 ### History and current feature
 
