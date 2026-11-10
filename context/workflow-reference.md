@@ -74,7 +74,7 @@ A passing run writes `.gate/last.json`:
 
 ### Shipping: pull request or local merge
 
-`/feature/complete` inspects the diff before merging. If every changed path ends in `.md`, it merges locally with `--no-ff`. Any code, test, config, or lockfile change is pushed as a branch and handed over as a pull request; the history entry and the `current-feature.md` reset are committed only after that PR merges. `gh` is optional — without it the command reports the GitHub compare URL instead.
+`/feature/complete` inspects the diff before merging. If every changed path ends in `.md`, it merges locally with `--no-ff`. Any code, test, config, or lockfile change is pushed as a branch and handed over as a pull request; the history entry and the `current-feature.md` reset are committed only after that PR merges. `gh` is optional — without it the command reports the GitHub compare URL instead. Every PR gets a brief professional description: summary of the behaviour change, the areas touched, the gate result, and any manual deployment steps.
 
 ### History and current feature
 

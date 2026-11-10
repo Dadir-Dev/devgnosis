@@ -39,6 +39,15 @@ gh pr create --base main --title "<feature>" --body "<what shipped + verificatio
 
 Report the PR URL and stop. After the PR is merged, run `/feature/complete` again: `main` already contains the branch, so skip to step 6 (history + reset).
 
+Draft the PR title and a brief, professional description before pushing:
+
+- **Summary** — what shipped and the behaviour change, in 2–4 bullets.
+- **Changes** — the main files or areas touched, one line each; no file-by-file dump.
+- **Verification** — the gate result (lint, typegen + type-check, tests n/n, build) plus manual checks.
+- **Deployment / Notes** — env vars, migrations, or manual steps still owed; state "no schema change" when true.
+
+Keep it factual and plain: no marketing language, no emojis, no attribution trailers.
+
 **5. Delete the local branch**
 
 Docs-only merges only. Only after `git branch --merged` lists it. Never with `-D`. A pull request deletes its branch on GitHub.
