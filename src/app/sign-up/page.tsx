@@ -5,8 +5,7 @@ import { SignUpForm } from "@/components/auth/sign-up-form";
 import { SocialProviderButtons } from "@/components/auth/social-provider-buttons";
 import {
   getEnabledOAuthProviders,
-  isOAuthError,
-  OAUTH_ERROR_MESSAGES,
+  getOAuthErrorMessage,
 } from "@/features/auth/oauth-providers";
 import { requireGuest } from "@/lib/auth-session";
 import { env } from "@/lib/env";
@@ -26,10 +25,9 @@ export default async function SignUpPage({
   await requireGuest();
 
   const params = await searchParams;
-  const oauthError = isOAuthError(params.error)
-    ? OAUTH_ERROR_MESSAGES["sign-up"]
-    : null;
+  const oauthError = getOAuthErrorMessage(params.error, "sign-up");
   const providers = getEnabledOAuthProviders(env);
+  const showEmailSignUp = env.AUTH_EMAIL_SIGN_UP_ENABLED;
 
   return (
     <main className="flex min-h-dvh items-center justify-center bg-background p-6">
@@ -58,7 +56,28 @@ export default async function SignUpPage({
 
         <SocialProviderButtons providers={providers} page="sign-up" />
 
-        <SignUpForm />
+        {showEmailSignUp ? (
+          <SignUpForm />
+        ) : (
+          <div className="mt-4 rounded-md border border-border bg-muted/50 p-3 text-sm text-muted-foreground">
+            <p>
+              Email and password sign-up is closed. Use the demo account:{" "}
+              <span className="font-medium text-foreground">
+                demo@devgnosis.app
+              </span>{" "}
+              /{" "}
+              <span className="font-medium text-foreground">password123</span>.
+            </p>
+            <p className="mt-2">
+              <Link
+                href="/sign-in"
+                className="rounded-sm font-medium text-foreground underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50"
+              >
+                Sign in with the demo account
+              </Link>
+            </p>
+          </div>
+        )}
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
@@ -67,6 +86,15 @@ export default async function SignUpPage({
             className="rounded-sm font-medium text-foreground underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             Sign in
+          </Link>
+        </p>
+
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          <Link
+            href="/privacy"
+            className="rounded-sm underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            Privacy policy
           </Link>
         </p>
       </div>
