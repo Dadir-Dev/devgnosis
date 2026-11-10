@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   getEnabledOAuthProviders,
-  isOAuthError,
+  getOAuthErrorMessage,
   isOAuthProviderConfigured,
+  OAUTH_EMAIL_NOT_VERIFIED_MESSAGE,
+  OAUTH_ERROR_MESSAGES,
 } from "./oauth-providers";
 
 const ALL_CREDENTIALS = {
@@ -45,16 +47,38 @@ describe("getEnabledOAuthProviders", () => {
   });
 });
 
-describe("isOAuthError", () => {
-  it("detects the oauth marker", () => {
-    expect(isOAuthError("oauth")).toBe(true);
-    expect(isOAuthError(undefined)).toBe(false);
-    expect(isOAuthError("access_denied")).toBe(false);
+describe("getOAuthErrorMessage", () => {
+  it("returns the provider-verification message for an unverified email", () => {
+    expect(getOAuthErrorMessage("OAUTH_EMAIL_NOT_VERIFIED", "sign-in")).toBe(
+      OAUTH_EMAIL_NOT_VERIFIED_MESSAGE,
+    );
+    expect(
+      getOAuthErrorMessage(
+        ["oauth", "OAUTH_EMAIL_NOT_VERIFIED"],
+        "sign-up",
+      ),
+    ).toBe(OAUTH_EMAIL_NOT_VERIFIED_MESSAGE);
   });
 
-  it("detects the marker when Better Auth appends its own error code", () => {
-    expect(isOAuthError(["oauth", "access_denied"])).toBe(true);
-    expect(isOAuthError(["access_denied"])).toBe(false);
+  it("returns the generic page message for the oauth marker", () => {
+    expect(getOAuthErrorMessage("oauth", "sign-in")).toBe(
+      OAUTH_ERROR_MESSAGES["sign-in"],
+    );
+    expect(getOAuthErrorMessage(["oauth", "access_denied"], "sign-up")).toBe(
+      OAUTH_ERROR_MESSAGES["sign-up"],
+    );
+  });
+
+  it("returns null when neither code is present", () => {
+    expect(getOAuthErrorMessage(undefined, "sign-in")).toBeNull();
+    expect(getOAuthErrorMessage("access_denied", "sign-in")).toBeNull();
+    expect(getOAuthErrorMessage(["access_denied"], "sign-up")).toBeNull();
+  });
+
+  it("prefers the specific message over the generic oauth marker", () => {
+    expect(
+      getOAuthErrorMessage(["OAUTH_EMAIL_NOT_VERIFIED", "oauth"], "sign-in"),
+    ).toBe(OAUTH_EMAIL_NOT_VERIFIED_MESSAGE);
   });
 });
 

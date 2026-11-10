@@ -24,14 +24,29 @@ export const OAUTH_ERROR_MESSAGES = {
 export const OAUTH_FAILURE_MESSAGE =
   "Could not connect to that provider. Try again or use email and password.";
 
+/** Specific failure for OAuth identities whose provider did not verify email. */
+export const OAUTH_EMAIL_NOT_VERIFIED_MESSAGE =
+  "Your provider did not confirm this email address. Verify it with your provider and try again.";
+
 /**
  * Better Auth appends its own `error` code to `errorCallbackURL`, so the
  * `oauth` marker can arrive alongside a second value (an array in Next.js).
  */
-export function isOAuthError(
+export function getOAuthErrorMessage(
   value: string | string[] | undefined,
-): boolean {
-  return Array.isArray(value) ? value.includes("oauth") : value === "oauth";
+  page: AuthPage,
+): string | null {
+  const codes = Array.isArray(value) ? value : value ? [value] : [];
+
+  if (codes.includes("OAUTH_EMAIL_NOT_VERIFIED")) {
+    return OAUTH_EMAIL_NOT_VERIFIED_MESSAGE;
+  }
+
+  if (codes.includes("oauth")) {
+    return OAUTH_ERROR_MESSAGES[page];
+  }
+
+  return null;
 }
 
 /** The subset of the parsed server environment that controls OAuth. */

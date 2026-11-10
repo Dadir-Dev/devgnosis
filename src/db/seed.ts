@@ -2,8 +2,9 @@ import { createHash } from "node:crypto";
 
 import { eq, sql } from "drizzle-orm";
 
-import { auth } from "../lib/auth";
+import { env } from "../lib/env";
 
+import { DEMO_USER, ensureDemoProfile, ensureDemoUser } from "./demo-account";
 import { db } from "./index";
 import {
   collections,
@@ -12,9 +13,8 @@ import {
   itemTypes,
   items,
   tags,
-  userProfiles,
 } from "./schema";
-import { user } from "./schema/auth";
+import { SYSTEM_ITEM_TYPES, seedSystemItemTypes } from "./system-item-types";
 
 /**
  * Idempotent development/demo seed (see `@context/features/seed-spec.md`).
@@ -22,76 +22,6 @@ import { user } from "./schema/auth";
  * Safe to run repeatedly and on every deploy: the demo user is created at most
  * once, and every other write is an upsert or an `ON CONFLICT DO NOTHING` no-op.
  */
-
-const DEMO_USER = {
-  email: "demo@devgnosis.app",
-  name: "Demo User",
-  displayName: "Demo User",
-  password: "12345678",
-} as const;
-
-/**
- * The seven seeded system item types (see project-overview). Stable and owned by
- * the system: `owner_id` is null and `is_system` is true.
- */
-const SYSTEM_ITEM_TYPES: (typeof itemTypes.$inferInsert)[] = [
-  {
-    key: "snippet",
-    name: "Snippet",
-    icon: "CodeXml",
-    color: "#3B82F6",
-    contentKind: "text",
-    isSystem: true,
-  },
-  {
-    key: "prompt",
-    name: "Prompt",
-    icon: "Sparkles",
-    color: "#8B5CF6",
-    contentKind: "text",
-    isSystem: true,
-  },
-  {
-    key: "note",
-    name: "Note",
-    icon: "StickyNote",
-    color: "#FDE047",
-    contentKind: "text",
-    isSystem: true,
-  },
-  {
-    key: "command",
-    name: "Command",
-    icon: "Terminal",
-    color: "#F97316",
-    contentKind: "text",
-    isSystem: true,
-  },
-  {
-    key: "link",
-    name: "Link",
-    icon: "Link",
-    color: "#10B981",
-    contentKind: "url",
-    isSystem: true,
-  },
-  {
-    key: "file",
-    name: "File",
-    icon: "File",
-    color: "#6B7280",
-    contentKind: "file",
-    isSystem: true,
-  },
-  {
-    key: "image",
-    name: "Image",
-    icon: "Image",
-    color: "#EC4899",
-    contentKind: "file",
-    isSystem: true,
-  },
-];
 
 type SystemTypeKey =
   | "snippet"
@@ -492,82 +422,6 @@ function seededId(key: string): string {
   ].join("-");
 }
 
-/**
- * Upserts the seven system item types on the partial unique index over `key`
- * where `is_system` is true.
- */
-async function seedSystemItemTypes(): Promise<void> {
-  await db
-    .insert(itemTypes)
-    .values(SYSTEM_ITEM_TYPES)
-    .onConflictDoUpdate({
-      target: itemTypes.key,
-      targetWhere: sql`is_system`,
-      set: {
-        name: sql`excluded.name`,
-        icon: sql`excluded.icon`,
-        color: sql`excluded.color`,
-        contentKind: sql`excluded.content_kind`,
-        updatedAt: sql`now()`,
-      },
-    });
-}
-
-/**
- * Returns the demo user's id, creating the account through Better Auth only if it
- * does not exist yet. Better Auth owns password hashing, so credentials are never
- * written by hand.
- */
-async function seedDemoUser(): Promise<string> {
-  const [existing] = await db
-    .select({ id: user.id })
-    .from(user)
-    .where(eq(user.email, DEMO_USER.email))
-    .limit(1);
-
-  let userId = existing?.id;
-
-  if (!userId) {
-    const result = await auth.api.signUpEmail({
-      body: {
-        email: DEMO_USER.email,
-        password: DEMO_USER.password,
-        name: DEMO_USER.name,
-      },
-    });
-    userId = result.user.id;
-  }
-
-  // Sign-up does not let us set `emailVerified`, so confirm it after the fact.
-  await db
-    .update(user)
-    .set({ name: DEMO_USER.name, emailVerified: true })
-    .where(eq(user.id, userId));
-
-  return userId;
-}
-
-/** Upserts the demo user's profile with the free plan. */
-async function seedDemoProfile(userId: string): Promise<void> {
-  await db
-    .insert(userProfiles)
-    .values({
-      userId,
-      displayName: DEMO_USER.displayName,
-      plan: "free",
-      planStatus: "active",
-    })
-    .onConflictDoUpdate({
-      target: userProfiles.userId,
-      set: {
-        displayName: sql`excluded.display_name`,
-        plan: sql`excluded.plan`,
-        planStatus: sql`excluded.plan_status`,
-        updatedAt: sql`now()`,
-      },
-    });
-}
-
 /** Resolves the seeded system item type ids by key. */
 async function getSystemTypeIds(): Promise<Record<SystemTypeKey, string>> {
   const rows = await db
@@ -700,13 +554,32 @@ async function seedCollectionsAndItems(
   });
 }
 
+/** Host of the configured database, so a seed run names the branch it writes to. */
+function describeTarget(): string {
+  return (
+    process.env.DATABASE_URL?.split("@")[1]?.split("/")[0] ?? "unknown host"
+  );
+}
+
 /** Runs every seed step in order and reports a short summary. */
 async function seed(): Promise<void> {
+  if (env.NODE_ENV === "production" || process.env.ALLOW_FULL_SEED !== "1") {
+    throw new Error(
+      [
+        `Refusing to run the full demo seed against ${describeTarget()}.`,
+        "It writes demo collections and items, which production must not receive.",
+        "Production: use `bun run db:seed:production`.",
+        "Development or preview, after confirming the target:",
+        '  $env:ALLOW_FULL_SEED="1"; bun run db:seed',
+      ].join("\n"),
+    );
+  }
+
   await seedSystemItemTypes();
   console.log(`Seeded ${SYSTEM_ITEM_TYPES.length} system item types.`);
 
-  const userId = await seedDemoUser();
-  await seedDemoProfile(userId);
+  const userId = await ensureDemoUser();
+  await ensureDemoProfile(userId);
   console.log(`Seeded demo user ${DEMO_USER.email} (free plan).`);
 
   const typeIds = await getSystemTypeIds();

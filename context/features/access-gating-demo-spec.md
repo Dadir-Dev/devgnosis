@@ -49,21 +49,20 @@ Spec written; implementation not started.
 Add `AUTH_EMAIL_SIGN_UP_ENABLED` to `src/lib/env.ts` and `.env.example`:
 
 ```dotenv
-# Email/password sign-up. Disabled in production until email verification
-# ships; OAuth sign-up is unaffected. Local development defaults to true.
-AUTH_EMAIL_SIGN_UP_ENABLED="true"
+# Email/password sign-up. Closed everywhere by default until email verification
+# ships; OAuth sign-up is unaffected. Set to "true" only to test email/password
+# sign-up locally.
+AUTH_EMAIL_SIGN_UP_ENABLED="false"
 ```
 
 Validation:
 
 ```ts
-AUTH_EMAIL_SIGN_UP_ENABLED: z
-  .stringbool()
-  .default(process.env.NODE_ENV !== "production"),
+AUTH_EMAIL_SIGN_UP_ENABLED: z.stringbool().default(false),
 ```
 
-- Default `false` when `NODE_ENV === "production"` (Vercel Production and
-  Preview), `true` otherwise.
+- Default `false` in every environment, including local development. Local
+  testing opts in explicitly with `AUTH_EMAIL_SIGN_UP_ENABLED="true"`.
 - The flag controls **email/password sign-up only**. It must not gate OAuth.
 
 ### 2. Better Auth configuration
@@ -107,10 +106,11 @@ databaseHooks: {
 
 Why this condition:
 
-- In production the flag is `false`, so the only new users are OAuth users.
-  An OAuth user with `emailVerified: false` (possible with GitHub) is rejected.
-- Locally the flag is `true`, so email/password sign-up can still create
-  unverified users for testing.
+- The flag is `false` by default, so the only new users are OAuth users. An
+  OAuth user with `emailVerified: false` (possible with GitHub) is rejected.
+- Locally the flag is also `false`; setting
+  `AUTH_EMAIL_SIGN_UP_ENABLED="true"` restores email/password sign-up for
+  testing, including unverified users.
 - The demo seed writes directly to the database and bypasses the hook.
 
 Better Auth's OAuth callback turns a thrown `APIError` into
@@ -235,15 +235,24 @@ Logs a short summary and exits non-zero on failure. It must **not** call
 - Add a guard at the start of `seed()`:
 
 ```ts
-if (
-  env.NODE_ENV === "production" &&
-  process.env.ALLOW_FULL_SEED !== "1"
-) {
+if (env.NODE_ENV === "production" || process.env.ALLOW_FULL_SEED !== "1") {
   throw new Error(
-    "Refusing to run the full demo seed in production. Use `bun run db:seed:production`.",
+    [
+      `Refusing to run the full demo seed against ${describeTarget()}.`,
+      "It writes demo collections and items, which production must not receive.",
+      "Production: use `bun run db:seed:production`.",
+      "Development or preview, after confirming the target:",
+      '  $env:ALLOW_FULL_SEED="1"; bun run db:seed',
+    ].join("\n"),
   );
 }
 ```
+
+The flag is required in every environment because `NODE_ENV` is unset when
+`bun` runs the script locally, so a `NODE_ENV`-only check never fires. It is
+deliberately **not** stored in `.env`: a value there would be inherited by any
+run, including one pointed at production. Set it per command after reading the
+target host in the error message.
 
 **`package.json`**
 
@@ -310,8 +319,8 @@ ship a button that always fails.
 - **Full-seed guard.** Production provisioning is a separate, explicit script.
 - **Keep auto-linking.** The same verified email across Google and GitHub maps
   to one account.
-- **Preview matches production.** Email/password sign-up is off in Vercel
-  Preview; test it locally.
+- **Preview matches production.** Email/password sign-up is off by default in
+  every environment; opt in locally with `AUTH_EMAIL_SIGN_UP_ENABLED="true"`.
 
 ## Manual setup
 
@@ -345,6 +354,22 @@ SELECT count(*) FROM items;
 ```
 
 Expected: the demo user, verified, free plan, and zero items.
+
+### Neon preview branch
+
+Preview is seeded like development — demo account, collections, items, tags, and
+system item types — so the deployed preview has content to review. Use the
+preview branch's own connection strings:
+
+```powershell
+$env:DATABASE_URL="<preview direct URL>"
+$env:DATABASE_URL_POOLED="<preview pooled URL>"
+$env:ALLOW_FULL_SEED="1"
+bun run db:seed
+```
+
+Never run this step against the `production` branch; production receives only
+`db:seed:production`.
 
 ### Development branch cleanup
 
@@ -382,8 +407,8 @@ custom item types. System item types (`owner_id IS NULL`) survive.
 
 ### Unit (Vitest)
 
-- `AUTH_EMAIL_SIGN_UP_ENABLED` defaults to `false` when `NODE_ENV` is
-  `production` and `true` otherwise; accepts `"true"` / `"false"`.
+- `AUTH_EMAIL_SIGN_UP_ENABLED` defaults to `false` in every environment,
+  including local development; accepts `"true"` / `"false"`.
 - `signUpAction` returns the closed message when the flag is false and does not
   call `auth.api.signUpEmail`.
 - `signUpAction` still creates an account when the flag is true.
@@ -394,10 +419,10 @@ custom item types. System item types (`owner_id IS NULL`) survive.
 
 ### Manual
 
-- [ ] Local (`AUTH_EMAIL_SIGN_UP_ENABLED=true`): email/password sign-up still
-      works and lands on `/dashboard`.
-- [ ] Production-like (`false`): `/sign-up` shows OAuth buttons and the demo
-      note, not the email/password form.
+- [ ] Local with `AUTH_EMAIL_SIGN_UP_ENABLED="true"`: email/password sign-up
+      still works and lands on `/dashboard`.
+- [ ] Default (`false`) locally and in production: `/sign-up` shows OAuth
+      buttons and the demo note, not the email/password form.
 - [ ] Calling `signUpAction` directly with the flag off returns the closed
       message.
 - [ ] GitHub and Google create accounts and land on `/dashboard`.
@@ -407,8 +432,8 @@ custom item types. System item types (`owner_id IS NULL`) survive.
 - [ ] `/privacy` loads without a session and is linked from the auth pages.
 - [ ] `bun run db:seed:production` against a scratch branch creates system item
       types and the demo account, and zero items.
-- [ ] `bun run db:seed` refuses to run with `NODE_ENV=production` unless
-      `ALLOW_FULL_SEED=1`.
+- [ ] `bun run db:seed` refuses without `ALLOW_FULL_SEED=1`, and refuses in
+      production regardless.
 - [ ] Google OAuth app is published and a non-test Google account can sign in.
 - [ ] `bun run gate` passes.
 
@@ -435,7 +460,8 @@ custom item types. System item types (`owner_id IS NULL`) survive.
   sending domain exists.
 - **No password reset.** OAuth users recover through their provider; the demo
   password is fixed.
-- **Preview uses the production sign-up policy.** Test email/password locally.
+- **Sign-up is closed everywhere by default.** Local testing opts in with
+  `AUTH_EMAIL_SIGN_UP_ENABLED="true"`.
 
 ## Follow-ups
 

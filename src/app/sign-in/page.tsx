@@ -5,8 +5,7 @@ import { SignInForm } from "@/components/auth/sign-in-form";
 import { SocialProviderButtons } from "@/components/auth/social-provider-buttons";
 import {
   getEnabledOAuthProviders,
-  isOAuthError,
-  OAUTH_ERROR_MESSAGES,
+  getOAuthErrorMessage,
 } from "@/features/auth/oauth-providers";
 import { requireGuest } from "@/lib/auth-session";
 import { env } from "@/lib/env";
@@ -19,8 +18,6 @@ export const metadata: Metadata = {
 // instead of producing a static shell.
 export const instant = false;
 
-const showDemoCredentials = process.env.NODE_ENV !== "production";
-
 /** Minimal sign-in route so the authenticated dashboard is reachable. */
 export default async function SignInPage({
   searchParams,
@@ -28,9 +25,7 @@ export default async function SignInPage({
   await requireGuest();
 
   const params = await searchParams;
-  const oauthError = isOAuthError(params.error)
-    ? OAUTH_ERROR_MESSAGES["sign-in"]
-    : null;
+  const oauthError = getOAuthErrorMessage(params.error, "sign-in");
   const providers = getEnabledOAuthProviders(env);
 
   return (
@@ -72,15 +67,22 @@ export default async function SignInPage({
           </Link>
         </p>
 
-        {showDemoCredentials ? (
-          <p className="mt-6 rounded-md border border-border bg-muted/50 p-3 text-xs text-muted-foreground">
-            Demo account:{" "}
-            <span className="font-medium text-foreground">
-              demo@devgnosis.app
-            </span>{" "}
-            / <span className="font-medium text-foreground">12345678</span>
-          </p>
-        ) : null}
+        <p className="mt-6 rounded-md border border-border bg-muted/50 p-3 text-xs text-muted-foreground">
+          Demo account:{" "}
+          <span className="font-medium text-foreground">
+            demo@devgnosis.app
+          </span>{" "}
+          / <span className="font-medium text-foreground">password123</span>
+        </p>
+
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          <Link
+            href="/privacy"
+            className="rounded-sm underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            Privacy policy
+          </Link>
+        </p>
       </div>
     </main>
   );
