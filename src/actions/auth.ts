@@ -50,6 +50,8 @@ const SIGN_UP_INVALID_MESSAGE =
 const SIGN_UP_DUPLICATE_MESSAGE =
   "An account with this email already exists. Sign in instead.";
 const SIGN_UP_FAILURE_MESSAGE = "Could not create your account. Try again.";
+const SIGN_UP_CLOSED_MESSAGE =
+  "Email and password sign-ups are closed. Continue with GitHub or Google, or use the demo account.";
 const TOO_MANY_ATTEMPTS_MESSAGE =
   "Too many attempts. Wait a few minutes and try again.";
 
@@ -65,6 +67,13 @@ function isDuplicateAccountError(error: unknown): boolean {
 
   const code = error.body?.code;
   return typeof code === "string" && DUPLICATE_ACCOUNT_CODES.has(code);
+}
+
+function isEmailSignUpDisabledError(error: unknown): boolean {
+  return (
+    isAPIError(error) &&
+    error.body?.code === "EMAIL_PASSWORD_SIGN_UP_DISABLED"
+  );
 }
 
 /**
@@ -164,6 +173,10 @@ export async function signUpAction(
   _previousState: SignUpState,
   formData: FormData,
 ): Promise<SignUpState> {
+  if (!env.AUTH_EMAIL_SIGN_UP_ENABLED) {
+    return { error: SIGN_UP_CLOSED_MESSAGE };
+  }
+
   const parsed = signUpSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
@@ -209,6 +222,10 @@ export async function signUpAction(
       headers: requestHeaders,
     });
   } catch (error) {
+    if (isEmailSignUpDisabledError(error)) {
+      return { error: SIGN_UP_CLOSED_MESSAGE };
+    }
+
     if (isDuplicateAccountError(error)) {
       return { error: SIGN_UP_DUPLICATE_MESSAGE };
     }

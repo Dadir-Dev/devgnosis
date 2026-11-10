@@ -7,6 +7,11 @@ const mocks = vi.hoisted(() => ({
   signInEmail: vi.fn(),
   redirect: vi.fn(),
   headers: vi.fn(),
+  env: {
+    GITHUB_CLIENT_ID: "github-id",
+    GITHUB_CLIENT_SECRET: "github-secret",
+    AUTH_EMAIL_SIGN_UP_ENABLED: true,
+  },
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -20,12 +25,7 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 // GitHub is configured; Google is not.
-vi.mock("@/lib/env", () => ({
-  env: {
-    GITHUB_CLIENT_ID: "github-id",
-    GITHUB_CLIENT_SECRET: "github-secret",
-  },
-}));
+vi.mock("@/lib/env", () => ({ env: mocks.env }));
 
 vi.mock("next/headers", () => ({ headers: mocks.headers }));
 vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
@@ -58,6 +58,8 @@ const SIGN_IN_INITIAL: SignInState = { error: null };
 const SIGN_UP_INITIAL: SignUpState = { error: null };
 const TOO_MANY_ATTEMPTS_MESSAGE =
   "Too many attempts. Wait a few minutes and try again.";
+const SIGN_UP_CLOSED_MESSAGE =
+  "Email and password sign-ups are closed. Continue with GitHub or Google, or use the demo account.";
 
 function toFormData(values: Record<string, string>): FormData {
   const data = new FormData();
@@ -79,6 +81,7 @@ const VALID_SIGN_UP = {
 beforeEach(() => {
   vi.clearAllMocks();
   resetAuthAttempts();
+  mocks.env.AUTH_EMAIL_SIGN_UP_ENABLED = true;
   mocks.headers.mockResolvedValue(
     new Headers({ "x-forwarded-for": "203.0.113.7" }),
   );
@@ -241,6 +244,34 @@ describe("signInAction", () => {
 });
 
 describe("signUpAction", () => {
+  it("returns the closed message when email/password sign-up is disabled", async () => {
+    mocks.env.AUTH_EMAIL_SIGN_UP_ENABLED = false;
+
+    const state = await signUpAction(
+      SIGN_UP_INITIAL,
+      toFormData(VALID_SIGN_UP),
+    );
+
+    expect(state.error).toBe(SIGN_UP_CLOSED_MESSAGE);
+    expect(mocks.signUpEmail).not.toHaveBeenCalled();
+  });
+
+  it("maps Better Auth's disabled sign-up error to the closed message", async () => {
+    mocks.signUpEmail.mockRejectedValue(
+      APIError.from("FORBIDDEN", {
+        code: "EMAIL_PASSWORD_SIGN_UP_DISABLED",
+        message: "Email and password sign-up is disabled",
+      }),
+    );
+
+    const state = await signUpAction(
+      SIGN_UP_INITIAL,
+      toFormData(VALID_SIGN_UP),
+    );
+
+    expect(state.error).toBe(SIGN_UP_CLOSED_MESSAGE);
+  });
+
   it("creates an account and redirects to the dashboard", async () => {
     mocks.signUpEmail.mockResolvedValue({ token: "session-token" });
 
